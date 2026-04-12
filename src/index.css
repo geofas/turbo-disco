@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Sudoku Trainer color palette */
+    --color-primary-blue: #0066CC;
+    --color-secondary-teal: #20B2AA;
+    --color-success-green: #28A745;
+    --color-neutral-dark: #1F2937;
+    --color-neutral-light: #F3F4F6;
+    --color-warning-orange: #FF9800;
+    --color-candidate-purple: #9C27B0;
+  }
+
+  body {
+    @apply bg-neutral-light text-neutral-dark;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-neutral-dark font-semibold;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  button {
+    @apply rounded px-4 py-2 font-medium transition-colors;
+  }
+
+  .btn-primary {
+    @apply bg-primary-blue text-white hover:bg-blue-700;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary-teal text-white hover:bg-teal-700;
+  }
+
+  .btn-success {
+    @apply bg-success-green text-white hover:bg-green-700;
+  }
+
+  .btn-warning {
+    @apply bg-warning-orange text-white hover:bg-orange-700;
+  }
+}
+
+@layer components {
+  .container-sudoku {
+    @apply max-w-6xl mx-auto px-4 py-8;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  .grid-sudoku {
+    @apply inline-block border-2 border-neutral-dark;
+  }
+
+  .cell-sudoku {
+    @apply w-12 h-12 flex items-center justify-center border border-neutral-dark text-lg font-bold cursor-pointer hover:bg-neutral-light;
+  }
+
+  .cell-sudoku.filled {
+    @apply bg-primary-blue text-white;
+  }
+
+  .cell-sudoku.candidate {
+    @apply text-candidate-purple text-sm;
+  }
+}
