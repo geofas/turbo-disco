@@ -52,6 +52,12 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
   const [candidates, setCandidates] = useState<CandidateMap>({});
   const [pencilMode, setPencilMode] = useState(false);
 
+  // Sync userValues when puzzle prop changes (e.g., dummy → real puzzle transition)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync from prop
+    setUserValues(puzzle.map(row => [...row]));
+  }, [puzzle]);
+
   // Sync external selectedCell prop
   useEffect(() => {
     if (externalSelectedCell) {

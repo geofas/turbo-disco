@@ -99,6 +99,29 @@ export function usePuzzleSession(
     hintCount: 0
   });
 
+  // Sync state when puzzle data changes (handles initial dummy → real puzzle transition)
+  useEffect(() => {
+    setState({
+      puzzle: initialPuzzle,
+      solution,
+      userValues: savedState?.userValues ?? initialPuzzle.map((row) => [...row]),
+      timer: savedState?.timer ?? 0,
+      isRunning: false,
+      mistakes: savedState?.mistakes ?? 0,
+      hintsUsed: savedState?.hintsUsed ?? 0,
+      isComplete: false,
+      stats: {
+        solveTime: 0,
+        mistakes: savedState?.mistakes ?? 0,
+        hintsUsed: savedState?.hintsUsed ?? 0,
+        isComplete: false,
+        starRating: 3,
+      },
+      currentHint: null,
+      hintCount: 0,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPuzzle, solution]);
 
   // Timer effect
   useEffect(() => {
