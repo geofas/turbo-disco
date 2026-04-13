@@ -9,6 +9,7 @@ import { getSupabaseOrThrow } from './supabase';
 import { getProgress } from './progress-store';
 import { getGuestSession } from './guest-session';
 import type { Progress } from './progress-store';
+import type { Json } from '../types/database';
 
 /**
  * Migrate guest progress to Supabase after successful signup
@@ -63,7 +64,7 @@ export async function migrateGuestProgress(userId: string): Promise<void> {
           guest_session_id: guestSession.sessionId,
           migrated_to_user_id: userId,
           level_completed: getHighestCompletedLevel(progress),
-          puzzle_attempts_json: migrationData.puzzleAttempts,
+          puzzle_attempts_json: migrationData.puzzleAttempts as unknown as Json,
         },
       ]);
 
