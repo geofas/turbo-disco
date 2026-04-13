@@ -1,19 +1,55 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { lessons } from '../data/lessons';
 import { LessonStep } from '../components/LessonStep';
+import { useProgress } from '../contexts/ProgressContext';
 
 export default function LessonPage() {
   const { level } = useParams<{ level: string }>();
   const navigate = useNavigate();
+  const { completeLessonForLevel } = useProgress();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Find the lesson matching the URL level param
   const lesson = useMemo(() => {
     const levelNum = parseInt(level || '1', 10);
     return lessons.find((l) => l.level === levelNum);
   }, [level]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle countdown timer for auto-redirect
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+
+    if (redirectCountdown === 0) {
+      // Auto-redirect to practice
+      if (lesson) {
+        navigate(`/practice/${lesson.level}`);
+      }
+    } else {
+      // Decrement countdown
+      redirectTimeoutRef.current = setTimeout(() => {
+        setRedirectCountdown(redirectCountdown - 1);
+      }, 1000);
+    }
+
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, [redirectCountdown, lesson, navigate]);
 
   // Redirect if lesson not found
   if (!lesson) {
@@ -56,6 +92,11 @@ export default function LessonPage() {
 
   const handleCompletion = () => {
     setIsCompleted(true);
+    // Update progress store
+    const levelNum = parseInt(level || '1', 10);
+    completeLessonForLevel(levelNum);
+    // Start 3-second countdown before auto-redirect
+    setRedirectCountdown(3);
   };
 
   // Show completion screen if all steps done
@@ -63,23 +104,44 @@ export default function LessonPage() {
     return (
       <div className="container-sudoku min-h-screen flex items-center justify-center">
         <div className="text-center space-y-6 max-w-2xl">
-          <div className="text-6xl mb-4">🏆</div>
+          <div className="text-6xl mb-4 animate-pulse">🏆</div>
           <h1 className="text-4xl md:text-5xl font-bold">
-            Congratulations!
+            Level {lesson?.level} Lesson Complete!
           </h1>
           <p className="text-xl text-gray-700">
-            You've completed the <strong>{lesson.technique}</strong> lesson!
+            You've mastered the <strong>{lesson?.technique}</strong> technique!
           </p>
           <p className="text-gray-600">
             You're now ready to practice what you've learned. Apply these new
             skills to solve more puzzles and build your mastery.
           </p>
+
+          {/* Countdown timer */}
+          {redirectCountdown !== null && (
+            <div className="py-4">
+              <p className="text-lg text-gray-600 mb-3">
+                {redirectCountdown > 0
+                  ? `Redirecting to practice in ${redirectCountdown}...`
+                  : 'Redirecting...'}
+              </p>
+              <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full transition-all duration-1000"
+                  style={{
+                    width: `${((3 - redirectCountdown) / 3) * 100}%`,
+                    backgroundColor: 'var(--color-primary-blue)',
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           <div className="pt-4">
             <button
-              onClick={() => navigate(`/practice/${lesson.level}`)}
+              onClick={() => navigate(`/practice/${lesson?.level}`)}
               className="btn-success px-8 py-3 text-lg"
             >
-              Start Practicing
+              Go to Practice Now
             </button>
           </div>
         </div>

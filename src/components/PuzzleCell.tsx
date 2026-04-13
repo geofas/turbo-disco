@@ -1,4 +1,5 @@
 import React from 'react';
+import './PuzzleCell.css';
 
 interface PuzzleCellProps {
   value: number;
@@ -14,6 +15,7 @@ interface PuzzleCellProps {
   readOnly?: boolean;
   candidates?: Set<number>;
   onClick: () => void;
+  highlightDelay?: number; // Delay in ms for staggered animations
 }
 
 export const PuzzleCell: React.FC<PuzzleCellProps> = ({
@@ -30,6 +32,7 @@ export const PuzzleCell: React.FC<PuzzleCellProps> = ({
   readOnly = false,
   candidates,
   onClick,
+  highlightDelay = 0,
 }) => {
   const isGiven = givenValue !== 0;
   const isEmpty = value === 0 && givenValue === 0;
@@ -64,6 +67,12 @@ export const PuzzleCell: React.FC<PuzzleCellProps> = ({
     textClass = 'text-gray-700';
   }
 
+  // Calculate highlight-specific animation classes
+  const highlightAnimationClass = isHighlighted ? 'cell-highlight-animate' : '';
+  const delayStyle = isHighlighted && highlightDelay > 0
+    ? { animationDelay: `${highlightDelay}ms` }
+    : undefined;
+
   return (
     <button
       onClick={onClick}
@@ -74,14 +83,16 @@ export const PuzzleCell: React.FC<PuzzleCellProps> = ({
         border border-gray-400
         text-base sm:text-lg md:text-xl
         font-semibold
-        transition-colors
+        transition-colors duration-300
         relative
         ${bgClass}
         ${textClass}
         ${borderClass}
+        ${highlightAnimationClass}
         ${!readOnly && !isGiven && 'hover:bg-gray-100'}
         ${readOnly || isGiven ? 'cursor-not-allowed' : 'cursor-pointer'}
       `}
+      style={delayStyle}
       title={isEmpty ? 'Empty' : `Value: ${displayValue}`}
     >
       {/* Main value or empty candidates view */}

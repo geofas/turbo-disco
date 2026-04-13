@@ -1,11 +1,20 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { PuzzleCell } from './PuzzleCell';
 import { NumberPad } from './NumberPad';
+import { ConstraintOverlay } from './ConstraintOverlay';
 
 interface HighlightCell {
   row: number;
   col: number;
   color: string;
+  delay?: number; // Animation delay in milliseconds for staggered highlighting
+}
+interface ConstraintIndicator {
+  row: number;
+  col: number;
+  label: string;
+  color: string;
+  type: 'filled' | 'eliminated' | 'arrow' | 'missing';
 }
 
 interface PuzzleGridProps {
@@ -16,6 +25,9 @@ interface PuzzleGridProps {
   readOnly?: boolean;
   selectedCell?: { row: number; col: number } | null;
   onCellSelect?: (row: number, col: number) => void;
+  constraintOverlay?: ConstraintIndicator[];
+  showConstraints?: boolean;
+  technique?: string;
 }
 
 interface CandidateMap {
@@ -29,6 +41,9 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
   readOnly = false,
   selectedCell: externalSelectedCell = null,
   onCellSelect,
+  constraintOverlay = [],
+  showConstraints = false,
+  technique = '',
 }) => {
   const [userValues, setUserValues] = useState<number[][]>(
     puzzle.map((row) => [...row])
@@ -38,6 +53,49 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
   );
   const [candidates, setCandidates] = useState<CandidateMap>({});
   const [pencilMode, setPencilMode] = useState(false);
+
+  // Helper to get valid candidates for a cell (numbers 1-9 not in row/col/box)
+  const getValidCandidates = useCallback(
+    (row: number, col: number): Set<number> => {
+      if (userValues[row][col] !== 0) return new Set();
+
+      const used = new Set<number>();
+
+      // Check row
+      for (let c = 0; c < 9; c++) {
+        if (userValues[row][c] !== 0) {
+          used.add(userValues[row][c]);
+        }
+      }
+
+      // Check column
+      for (let r = 0; r < 9; r++) {
+        if (userValues[r][col] !== 0) {
+          used.add(userValues[r][col]);
+        }
+      }
+
+      // Check 3x3 box
+      const boxRow = Math.floor(row / 3) * 3;
+      const boxCol = Math.floor(col / 3) * 3;
+      for (let r = boxRow; r < boxRow + 3; r++) {
+        for (let c = boxCol; c < boxCol + 3; c++) {
+          if (userValues[r][c] !== 0) {
+            used.add(userValues[r][c]);
+          }
+        }
+      }
+
+      const valid = new Set<number>();
+      for (let num = 1; num <= 9; num++) {
+        if (!used.has(num)) {
+          valid.add(num);
+        }
+      }
+      return valid;
+    },
+    [userValues]
+  );
 
   // Sync external selectedCell prop
   useEffect(() => {
@@ -118,6 +176,39 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
         newValues[row][col] = num;
         setUserValues(newValues);
         onCellChange?.(row, col, num);
+
+        // Auto-eliminate this number from candidates in same row, column, and box
+        const newCandidates = { ...candidates };
+
+        // Remove from row
+        for (let c = 0; c < 9; c++) {
+          const cellKey = `${row}-${c}`;
+          if (newCandidates[cellKey]) {
+            newCandidates[cellKey].delete(num);
+          }
+        }
+
+        // Remove from column
+        for (let r = 0; r < 9; r++) {
+          const cellKey = `${r}-${col}`;
+          if (newCandidates[cellKey]) {
+            newCandidates[cellKey].delete(num);
+          }
+        }
+
+        // Remove from 3x3 box
+        const boxRow = Math.floor(row / 3) * 3;
+        const boxCol = Math.floor(col / 3) * 3;
+        for (let r = boxRow; r < boxRow + 3; r++) {
+          for (let c = boxCol; c < boxCol + 3; c++) {
+            const cellKey = `${r}-${c}`;
+            if (newCandidates[cellKey]) {
+              newCandidates[cellKey].delete(num);
+            }
+          }
+        }
+
+        setCandidates(newCandidates);
       }
     },
     [selectedCell, puzzle, userValues, candidates, pencilMode, onCellChange]
@@ -138,9 +229,31 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
     setCandidates(newCandidates);
   }, [selectedCell, puzzle, userValues, candidates, onCellChange]);
 
+  const handleShowAllCandidates = useCallback(() => {
+    const newCandidates: CandidateMap = { ...candidates };
+
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (userValues[row][col] === 0 && puzzle[row][col] === 0) {
+          const key = `${row}-${col}`;
+          newCandidates[key] = getValidCandidates(row, col);
+        }
+      }
+    }
+
+    setCandidates(newCandidates);
+  }, [userValues, puzzle, getValidCandidates]);
+
   // Keyboard navigation and input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow 'P' for pencil toggle even without a selected cell
+      if ((e.key === 'p' || e.key === 'P') && !readOnly) {
+        e.preventDefault();
+        setPencilMode((prev) => !prev);
+        return;
+      }
+
       if (!selectedCell) return;
 
       const { row, col } = selectedCell;
@@ -180,14 +293,24 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedCell, handleCellSelect, handleNumberClick, handleClear]);
+  }, [selectedCell, handleCellSelect, handleNumberClick, handleClear, readOnly]);
 
-  const highlightMap = new Map(highlightCells.map((h) => [`${h.row}-${h.col}`, h.color]));
+  /**
+   * Build highlight map with both color and animation delay
+   * Allows per-cell styling and staggered animation effects from lesson sequences
+   */
+  const highlightMap = new Map(
+    highlightCells.map((h) => [
+      `${h.row}-${h.col}`,
+      { color: h.color, delay: h.delay || 0 },
+    ])
+  );
 
   return (
     <div className="flex flex-col items-center justify-center gap-6 p-4">
       {/* Main Sudoku Grid */}
       <div className="inline-block border-4 border-gray-900 shadow-lg">
+        <ConstraintOverlay visible={showConstraints} constraints={constraintOverlay} technique={technique} />
         {Array.from({ length: 9 }, (_, row) => (
           <div
             key={`row-${row}`}
@@ -224,7 +347,8 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
                     givenValue={givenValue}
                     isSelected={isSelected}
                     isHighlighted={highlightMap.has(`${row}-${col}`)}
-                    highlightColor={highlightMap.get(`${row}-${col}`)}
+                    highlightColor={highlightMap.get(`${row}-${col}`)?.color}
+                    highlightDelay={highlightMap.get(`${row}-${col}`)?.delay}
                     isSameNumber={isSameNumber}
                     isInSelectedRow={isInSelectedRow}
                     isInSelectedCol={isInSelectedCol}
@@ -244,22 +368,41 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
       {/* Controls */}
       {!readOnly && (
         <div className="flex flex-col items-center gap-4 w-full max-w-sm">
-          {/* Pencil Mode Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={pencilMode}
-              onChange={(e) => setPencilMode(e.target.checked)}
-              className="w-4 h-4"
-            />
-            <span className="text-sm font-medium">Pencil Mode (Candidates)</span>
-          </label>
+          {/* Pencil Mode Toggle with Visual Indicator */}
+          <div className="flex flex-col items-center gap-2 w-full">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={pencilMode}
+                onChange={(e) => setPencilMode(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium">Pencil Mode (Candidates)</span>
+              {pencilMode && (
+                <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
+                  ✏️ ON
+                </span>
+              )}
+            </label>
+            <p className="text-xs text-gray-500">Press 'P' to toggle</p>
+          </div>
+
+          {/* Show All Candidates Button */}
+          <button
+            onClick={handleShowAllCandidates}
+            className="w-full py-2 px-4 rounded font-semibold text-sm
+              bg-purple-500 text-white hover:bg-purple-600
+              transition-colors"
+          >
+            Show All Candidates
+          </button>
 
           {/* Number Pad */}
           <NumberPad
             onNumberClick={handleNumberClick}
             onClear={handleClear}
             disabled={!selectedCell}
+            selectedCandidates={selectedCell ? candidates[`${selectedCell.row}-${selectedCell.col}`] : undefined}
           />
         </div>
       )}
