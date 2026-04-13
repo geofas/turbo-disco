@@ -111,5 +111,32 @@ export const PUZZLES: PuzzleMeta[] = [
 export const PUZZLES_BY_LEVEL = {
   1: PUZZLES.filter(p => p.level === 1),
   2: PUZZLES.filter(p => p.level === 2),
-  3: PUZZLES.filter(p => p.level === 3)
+  3: PUZZLES.filter(p => p.level === 3),
 };
+
+export function getPuzzle(level: 1 | 2 | 3, puzzleNumber: 1 | 2 | 3) {
+  const puzzles = PUZZLES_BY_LEVEL[level];
+  const meta = puzzles[puzzleNumber - 1];
+  if (!meta) throw new Error(`Puzzle not found: L${level}-${puzzleNumber}`);
+  return {
+    grid: meta.grid.map((row) => [...row]),
+    solution: meta.solution.map((row) => [...row]),
+    level: meta.level,
+    difficulty: meta.difficulty,
+    filledCells: meta.filledCells,
+    techniques: meta.techniques,
+    generationTime: 0,
+  };
+}
+
+export function getPuzzleMetadata(level: 1 | 2 | 3, puzzleNumber: 1 | 2 | 3) {
+  const puzzles = PUZZLES_BY_LEVEL[level];
+  const meta = puzzles[puzzleNumber - 1];
+  if (!meta) throw new Error(`Puzzle metadata not found: L${level}-${puzzleNumber}`);
+  return {
+    id: meta.id,
+    difficulty: meta.difficulty,
+    filledCells: meta.filledCells,
+    techniques: meta.techniques,
+  };
+}
