@@ -139,31 +139,6 @@ export function usePuzzleSession(
     return () => clearInterval(interval);
   }, [state.isRunning]);
 
-  // Check for completion
-  useEffect(() => {
-    if (!state.isComplete && state.isRunning) {
-      const isComplete = isPuzzleComplete(state.userValues, solution);
-      if (isComplete) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- completion detection must update state
-        setState((prevState) => {
-          const newStats: PuzzleSessionStats = {
-            solveTime: prevState.timer,
-            mistakes: prevState.mistakes,
-            hintsUsed: prevState.hintsUsed,
-            isComplete: true,
-            starRating: calculateStarRating(prevState.mistakes, prevState.hintsUsed)
-          };
-          return {
-            ...prevState,
-            isComplete: true,
-            isRunning: false,
-            stats: newStats
-          };
-        });
-      }
-    }
-  }, [state.userValues, solution, state.isComplete, state.isRunning]);
-
   // Auto-save every 10 seconds
   useEffect(() => {
     if (!level || !puzzleNumber) return; // Don't save if level/puzzleNumber not provided
@@ -247,6 +222,25 @@ export function usePuzzleSession(
       const isCorrect = value === 0 || isValueCorrect(newUserValues, solution, row, col, value);
       const newMistakes = !isCorrect && value !== 0 ? prevState.mistakes + 1 : prevState.mistakes;
 
+      // Check for completion in the same setState call to avoid race conditions
+      if (value !== 0 && isPuzzleComplete(newUserValues, solution)) {
+        const newStats: PuzzleSessionStats = {
+          solveTime: prevState.timer,
+          mistakes: newMistakes,
+          hintsUsed: prevState.hintsUsed,
+          isComplete: true,
+          starRating: calculateStarRating(newMistakes, prevState.hintsUsed)
+        };
+        return {
+          ...prevState,
+          userValues: newUserValues,
+          mistakes: newMistakes,
+          isComplete: true,
+          isRunning: false,
+          stats: newStats
+        };
+      }
+
       return {
         ...prevState,
         userValues: newUserValues,
@@ -265,11 +259,33 @@ export function usePuzzleSession(
       if (hint && hint.type === 'value' && hint.row !== undefined && hint.col !== undefined && hint.value) {
         const newUserValues = prevState.userValues.map((r) => [...r]);
         newUserValues[hint.row][hint.col] = hint.value;
+        const newHintsUsed = prevState.hintsUsed + 1;
+
+        // Check for completion in the same setState call
+        if (isPuzzleComplete(newUserValues, solution)) {
+          const newStats: PuzzleSessionStats = {
+            solveTime: prevState.timer,
+            mistakes: prevState.mistakes,
+            hintsUsed: newHintsUsed,
+            isComplete: true,
+            starRating: calculateStarRating(prevState.mistakes, newHintsUsed)
+          };
+          return {
+            ...prevState,
+            userValues: newUserValues,
+            hintsUsed: newHintsUsed,
+            hintCount: prevState.hintCount + 1,
+            currentHint: hint,
+            isComplete: true,
+            isRunning: false,
+            stats: newStats
+          };
+        }
 
         return {
           ...prevState,
           userValues: newUserValues,
-          hintsUsed: prevState.hintsUsed + 1,
+          hintsUsed: newHintsUsed,
           hintCount: prevState.hintCount + 1,
           currentHint: hint
         };
