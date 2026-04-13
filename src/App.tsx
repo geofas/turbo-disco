@@ -6,6 +6,7 @@ import PracticePage from './pages/PracticePage'
 import CurriculumPage from './pages/CurriculumPage'
 import ProfilePage from './pages/ProfilePage'
 import AuthPage from './pages/AuthPage'
+import NotFoundPage from './pages/NotFoundPage'
 import { ProgressProvider } from './contexts/ProgressContext'
 import { AuthProvider } from './contexts/AuthContext'
 import './index.css'
@@ -23,6 +24,7 @@ function App() {
             <Route path="/practice/:level" element={<PracticePage />} />
             <Route path="/curriculum" element={<CurriculumPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Router>
       </ProgressProvider>

@@ -227,35 +227,7 @@ export function solvePuzzle(puzzle: Grid): SolveResult {
   while (progress && countUnsolved(solved) > 0) {
     progress = false;
 
-    // Technique 1: Naked Single (Level 3)
-    // A cell with only 1 candidate
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        if (solved[r][c] !== 0) continue;
-
-        if (candidates[r][c].size === 0) {
-          // Contradiction
-          return {
-            solved: false,
-            techniques,
-            steps: -1,
-            maxLevel: 1,
-            unsolved: countUnsolved(solved)
-          };
-        }
-
-        if (candidates[r][c].size === 1) {
-          const value = Array.from(candidates[r][c])[0];
-          solved[r][c] = value;
-          eliminateFromPeers(candidates, r, c, value);
-          techniques.nakedSingle++;
-          progress = true;
-          steps++;
-        }
-      }
-    }
-
-    // Technique 2: Full House (Level 1)
+    // Technique 1: Full House (Level 1) — check FIRST
     // Row/column/box has 8 filled cells, 1 empty
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
@@ -312,6 +284,34 @@ export function solvePuzzle(puzzle: Grid): SolveResult {
               steps++;
             }
           }
+        }
+      }
+    }
+
+    // Technique 2: Naked Single (Level 3)
+    // A cell with only 1 candidate
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (solved[r][c] !== 0) continue;
+
+        if (candidates[r][c].size === 0) {
+          // Contradiction
+          return {
+            solved: false,
+            techniques,
+            steps: -1,
+            maxLevel: 1,
+            unsolved: countUnsolved(solved)
+          };
+        }
+
+        if (candidates[r][c].size === 1) {
+          const value = Array.from(candidates[r][c])[0];
+          solved[r][c] = value;
+          eliminateFromPeers(candidates, r, c, value);
+          techniques.nakedSingle++;
+          progress = true;
+          steps++;
         }
       }
     }
@@ -431,6 +431,83 @@ function inferMissingValue(grid: Grid, row: number): number {
     if (!used.has(v)) return v;
   }
   return 0; // Error
+}
+
+/**
+ * Solve using ONLY Full House technique
+ * Used to validate L1 puzzles — every move must be a Full House
+ * (a row, column, or box with exactly 1 empty cell)
+ */
+export function solveFullHouseOnly(puzzle: Grid): SolveResult {
+  const solved = deepCopyGrid(puzzle);
+  const candidates = initializeCandidates(puzzle);
+
+  const techniques = {
+    fullHouse: 0,
+    hiddenSingle: 0,
+    nakedSingle: 0,
+    advanced: 0
+  };
+
+  let steps = 0;
+  let progress = true;
+
+  while (progress && countUnsolved(solved) > 0) {
+    progress = false;
+
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (solved[r][c] !== 0) continue;
+
+        let isFullHouse = false;
+
+        // Check row: 8 filled + this empty = full house
+        if (filledInRow(solved, r) === 8 && getEmptyInRow(solved, r).length === 1) {
+          isFullHouse = true;
+        }
+
+        // Check column
+        if (!isFullHouse && filledInCol(solved, c) === 8 && getEmptyInCol(solved, c).length === 1) {
+          isFullHouse = true;
+        }
+
+        // Check box
+        if (!isFullHouse && filledInBox(solved, r, c) === 8 && getEmptyInBox(solved, r, c).length === 1) {
+          isFullHouse = true;
+        }
+
+        if (isFullHouse) {
+          const value = Array.from(candidates[r][c])[0] || inferMissingValue(solved, r);
+          solved[r][c] = value;
+          eliminateFromPeers(candidates, r, c, value);
+          techniques.fullHouse++;
+          progress = true;
+          steps++;
+        }
+      }
+    }
+  }
+
+  const unsolved = countUnsolved(solved);
+  if (unsolved === 0) {
+    return {
+      solved: true,
+      solution: solved,
+      techniques,
+      steps,
+      maxLevel: 1,
+      unsolved: 0
+    };
+  } else {
+    techniques.advanced = unsolved;
+    return {
+      solved: false,
+      techniques,
+      steps,
+      maxLevel: 4,
+      unsolved
+    };
+  }
 }
 
 /**

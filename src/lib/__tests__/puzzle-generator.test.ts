@@ -215,9 +215,9 @@ describe('Puzzle Generator', () => {
       const grid = generateGrid(5000);
       const puzzle = createPuzzle(grid, 1, 5000);
 
-      // For level 1: should have 45-50 filled cells
-      expect(puzzle.reduce((sum, row) => sum + row.filter(cell => cell !== 0).length, 0)).toBeGreaterThanOrEqual(45);
-      expect(puzzle.reduce((sum, row) => sum + row.filter(cell => cell !== 0).length, 0)).toBeLessThanOrEqual(50);
+      // For level 1: should have 65-72 filled cells (Full House only)
+      expect(puzzle.reduce((sum, row) => sum + row.filter(cell => cell !== 0).length, 0)).toBeGreaterThanOrEqual(65);
+      expect(puzzle.reduce((sum, row) => sum + row.filter(cell => cell !== 0).length, 0)).toBeLessThanOrEqual(72);
     });
 
     it('should be deterministic with same seed', () => {

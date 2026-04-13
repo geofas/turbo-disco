@@ -55,22 +55,8 @@ export default function LessonPage() {
     };
   }, [redirectCountdown, lesson, navigate]);
 
-  // Redirect if lesson not found
-  if (!lesson) {
-    return (
-      <div className="container-sudoku">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Lesson Not Found</h1>
-          <p className="text-gray-600 mb-6">We couldn't find the lesson for level {level}.</p>
-          <button onClick={() => navigate('/')} className="btn-primary">
-            Back to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // Redirect if level is coming soon (hard gate at level 4+)
+  // Must check BEFORE !lesson since L4-L10 have no lesson data
   if (levelNum >= 4) {
     return (
       <div className="container-sudoku">
@@ -84,6 +70,22 @@ export default function LessonPage() {
             Master the fundamentals with Levels 1-3, and check back later for more advanced
             techniques.
           </p>
+          <button onClick={() => navigate('/curriculum')} className="btn-primary inline-block">
+            Back to Curriculum
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if lesson not found (invalid level number)
+  if (!lesson) {
+    return (
+      <div className="container-sudoku">
+        <div className="text-center space-y-6 py-12">
+          <div className="text-6xl mb-4">❓</div>
+          <h1 className="text-4xl font-bold">Lesson Not Found</h1>
+          <p className="text-gray-600 mb-6">We couldn't find a lesson for level {level}.</p>
           <button onClick={() => navigate('/curriculum')} className="btn-primary inline-block">
             Back to Curriculum
           </button>

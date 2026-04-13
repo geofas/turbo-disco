@@ -11,7 +11,7 @@
  * Seeds can be strings (e.g., "2026-04-13-L1-001") which are hashed to numbers.
  */
 
-import { solvePuzzle, deepCopyGrid } from './puzzle-solver';
+import { solvePuzzle, solveFullHouseOnly, deepCopyGrid } from './puzzle-solver';
 import type { SolveResult, Grid } from './puzzle-solver';
 
 export type Puzzle = {
@@ -25,8 +25,9 @@ export type Puzzle = {
 };
 
 // Difficulty parameters for each level
+// L1: Very easy — solvable with Full House only (65-72 filled = 9-16 empty)
 const difficultyParams = {
-  1: { minFilled: 45, maxFilled: 50, name: 'Full House' },
+  1: { minFilled: 65, maxFilled: 72, name: 'Full House' },
   2: { minFilled: 35, maxFilled: 40, name: 'Hidden Single' },
   3: { minFilled: 30, maxFilled: 35, name: 'Naked Single' }
 };
@@ -237,7 +238,8 @@ export function createPuzzle(grid: Grid, level: 1 | 2 | 3, seed: number): Grid {
     }
 
     // Validate the puzzle still has unique solution
-    const result = solvePuzzle(puzzle);
+    // For L1: must be solvable with Full House ONLY
+    const result = level === 1 ? solveFullHouseOnly(puzzle) : solvePuzzle(puzzle);
 
     // If removal breaks solvability, revert
     if (!result.solved) {
@@ -337,10 +339,11 @@ export function generatePuzzle(
     // Stage 2: Create puzzle by removing cells
     const puzzleGrid = createPuzzle(grid, level, attemptSeed);
 
-    // Stage 3: Validate solvability with L1–L3 techniques
-    const result = solvePuzzle(puzzleGrid);
+    // Stage 3: Validate solvability with appropriate techniques
+    // L1 must be solvable with Full House ONLY
+    const result = level === 1 ? solveFullHouseOnly(puzzleGrid) : solvePuzzle(puzzleGrid);
 
-    if (result.solved && result.maxLevel <= level) {
+    if (result.solved && (level === 1 || result.maxLevel <= level)) {
       // Success!
       const generationTime = performance.now() - startTime;
       return {
