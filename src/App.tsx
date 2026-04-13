@@ -6,6 +6,7 @@ import PracticePage from './pages/PracticePage'
 import CurriculumPage from './pages/CurriculumPage'
 import ProfilePage from './pages/ProfilePage'
 import AuthPage from './pages/AuthPage'
+import AuthCallbackPage from './pages/AuthCallbackPage'
 import NotFoundPage from './pages/NotFoundPage'
 import { ProgressProvider } from './contexts/ProgressContext'
 import { AuthProvider } from './contexts/AuthContext'
@@ -20,6 +21,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
             <Route path="/lesson/:level" element={<LessonPage />} />
             <Route path="/practice/:level" element={<PracticePage />} />
             <Route path="/curriculum" element={<CurriculumPage />} />

@@ -15,6 +15,7 @@ export interface AuthContextType {
   isLoading: boolean;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   isMigrating: boolean;
   migrationStatus: string | null;
@@ -141,6 +142,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) {
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     if (!supabase) {
       // Guest mode, just clear state
@@ -163,6 +180,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     isMigrating,
     migrationStatus,
