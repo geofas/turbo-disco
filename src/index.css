@@ -1,15 +1,15 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @layer base {
   :root {
     /* Sudoku Trainer color palette */
-    --color-primary-blue: #0066CC;
-    --color-secondary-teal: #20B2AA;
-    --color-success-green: #28A745;
-    --color-neutral-dark: #1F2937;
-    --color-neutral-light: #F3F4F6;
-    --color-warning-orange: #FF9800;
-    --color-candidate-purple: #9C27B0;
+    --color-primary-blue: #0066cc;
+    --color-secondary-teal: #20b2aa;
+    --color-success-green: #28a745;
+    --color-neutral-dark: #1f2937;
+    --color-neutral-light: #f3f4f6;
+    --color-warning-orange: #ff9800;
+    --color-candidate-purple: #9c27b0;
   }
 
   body {
@@ -17,7 +17,12 @@
     color: var(--color-neutral-dark);
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold;
     color: var(--color-neutral-dark);
   }
@@ -78,7 +83,7 @@
   }
 
   .cell-sudoku {
-    @apply w-12 h-12 flex items-center justify-center border text-lg font-bold cursor-pointer;
+    @apply w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center border text-sm sm:text-base md:text-lg font-bold cursor-pointer;
     border-color: var(--color-neutral-dark);
     background-color: transparent;
   }

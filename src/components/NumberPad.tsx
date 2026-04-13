@@ -18,7 +18,7 @@ export const NumberPad: React.FC<NumberPadProps> = ({
   return (
     <div className="flex flex-col gap-3 w-full max-w-xs mx-auto">
       <div className="grid grid-cols-3 gap-2">
-        {Array.from({ length: 9 }, (_, i) => i + 1).map((num) => {
+        {Array.from({ length: 9 }, (_, i) => i + 1).map(num => {
           const isCandidateActive = selectedCandidates && selectedCandidates.has(num);
           return (
             <button
@@ -26,14 +26,14 @@ export const NumberPad: React.FC<NumberPadProps> = ({
               onClick={() => onNumberClick(num)}
               disabled={disabled}
               className={`
-                py-3 px-2 rounded font-bold text-lg
+                py-3 px-2 sm:py-4 sm:px-3 rounded font-bold text-lg min-h-12
                 transition-colors relative
                 ${
                   selectedNumber === num
                     ? 'bg-blue-500 text-white'
                     : isCandidateActive
-                    ? 'bg-purple-300 text-purple-900 font-bold'
-                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                      ? 'bg-purple-300 text-purple-900 font-bold'
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
                 }
                 ${disabled && 'opacity-50 cursor-not-allowed'}
               `}
@@ -51,7 +51,7 @@ export const NumberPad: React.FC<NumberPadProps> = ({
         onClick={onClear}
         disabled={disabled}
         className={`
-          w-full py-3 px-4 rounded font-bold text-base
+          w-full py-3 sm:py-4 px-4 rounded font-bold text-base min-h-12
           transition-colors
           bg-red-500 text-white hover:bg-red-600
           ${disabled && 'opacity-50 cursor-not-allowed'}

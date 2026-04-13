@@ -45,9 +45,7 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
   showConstraints = false,
   technique = '',
 }) => {
-  const [userValues, setUserValues] = useState<number[][]>(
-    puzzle.map((row) => [...row])
-  );
+  const [userValues, setUserValues] = useState<number[][]>(puzzle.map(row => [...row]));
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(
     externalSelectedCell
   );
@@ -142,7 +140,11 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
   const hasError = (row: number, col: number): boolean => {
     const value = userValues[row][col];
     if (value === 0) return false;
-    return hasRowConflict(row, col, value) || hasColConflict(row, col, value) || hasBoxConflict(row, col, value);
+    return (
+      hasRowConflict(row, col, value) ||
+      hasColConflict(row, col, value) ||
+      hasBoxConflict(row, col, value)
+    );
   };
 
   const handleCellSelect = useCallback(
@@ -160,7 +162,7 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
       const { row, col } = selectedCell;
       if (puzzle[row][col] !== 0) return; // Given cell, don't modify
 
-      const newValues = userValues.map((r) => [...r]);
+      const newValues = userValues.map(r => [...r]);
       if (pencilMode) {
         const key = `${row}-${col}`;
         const newCandidates = { ...candidates };
@@ -220,7 +222,7 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
     const { row, col } = selectedCell;
     if (puzzle[row][col] !== 0) return;
 
-    const newValues = userValues.map((r) => [...r]);
+    const newValues = userValues.map(r => [...r]);
     newValues[row][col] = 0;
     setUserValues(newValues);
     onCellChange?.(row, col, 0);
@@ -251,7 +253,7 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
       // Allow 'P' for pencil toggle even without a selected cell
       if ((e.key === 'p' || e.key === 'P') && !readOnly) {
         e.preventDefault();
-        setPencilMode((prev) => !prev);
+        setPencilMode(prev => !prev);
         return;
       }
 
@@ -301,17 +303,21 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
    * Allows per-cell styling and staggered animation effects from lesson sequences
    */
   const highlightMap = new Map(
-    highlightCells.map((h) => [
-      `${h.row}-${h.col}`,
-      { color: h.color, delay: h.delay || 0 },
-    ])
+    highlightCells.map(h => [`${h.row}-${h.col}`, { color: h.color, delay: h.delay || 0 }])
   );
 
   return (
-    <div className="flex flex-col items-center justify-center gap-6 p-4">
+    <div className="flex flex-col items-center justify-center gap-4 sm:gap-6 px-2 sm:p-4 py-4">
       {/* Main Sudoku Grid */}
-      <div className="inline-block border-4 border-gray-900 shadow-lg">
-        <ConstraintOverlay visible={showConstraints} constraints={constraintOverlay} technique={technique} />
+      <div
+        className="inline-block border-4 border-gray-900 shadow-lg overflow-auto"
+        style={{ maxWidth: '90vw' }}
+      >
+        <ConstraintOverlay
+          visible={showConstraints}
+          constraints={constraintOverlay}
+          technique={technique}
+        />
         {Array.from({ length: 9 }, (_, row) => (
           <div
             key={`row-${row}`}
@@ -368,14 +374,14 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
 
       {/* Controls */}
       {!readOnly && (
-        <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+        <div className="flex flex-col items-center gap-4 w-full max-w-sm px-2">
           {/* Pencil Mode Toggle with Visual Indicator */}
           <div className="flex flex-col items-center gap-2 w-full">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={pencilMode}
-                onChange={(e) => setPencilMode(e.target.checked)}
+                onChange={e => setPencilMode(e.target.checked)}
                 className="w-4 h-4"
               />
               <span className="text-sm font-medium">Pencil Mode (Candidates)</span>
@@ -403,7 +409,9 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
             onNumberClick={handleNumberClick}
             onClear={handleClear}
             disabled={!selectedCell}
-            selectedCandidates={selectedCell ? candidates[`${selectedCell.row}-${selectedCell.col}`] : undefined}
+            selectedCandidates={
+              selectedCell ? candidates[`${selectedCell.row}-${selectedCell.col}`] : undefined
+            }
           />
         </div>
       )}

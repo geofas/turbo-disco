@@ -45,7 +45,7 @@ function StarRating({ rating }: { rating: 1 | 2 | 3 }) {
 export const CompletionOverlay: React.FC<CompletionOverlayProps> = ({
   stats,
   onNextPuzzle,
-  onBackToLevel
+  onBackToLevel,
 }) => {
   // Confetti animation CSS
   const confettiStyle = `
@@ -93,7 +93,7 @@ export const CompletionOverlay: React.FC<CompletionOverlayProps> = ({
             backgroundColor: colors[colorIndex],
             animation: `confetti-fall ${duration}s ease-in forwards`,
             animationDelay: `${delay}s`,
-            borderRadius: isCircle ? '50%' : '0'
+            borderRadius: isCircle ? '50%' : '0',
           }}
         />
       );
@@ -109,12 +109,8 @@ export const CompletionOverlay: React.FC<CompletionOverlayProps> = ({
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full mx-4 animate-in fade-in zoom-in">
           {/* Celebration Header */}
-          <h2 className="text-3xl font-bold text-center mb-2 text-blue-600">
-            Puzzle Complete!
-          </h2>
-          <p className="text-center text-gray-600 mb-6">
-            Great job solving this sudoku!
-          </p>
+          <h2 className="text-3xl font-bold text-center mb-2 text-blue-600">Puzzle Complete!</h2>
+          <p className="text-center text-gray-600 mb-6">Great job solving this sudoku!</p>
 
           {/* Star Rating */}
           <div className="mb-8">
@@ -122,28 +118,22 @@ export const CompletionOverlay: React.FC<CompletionOverlayProps> = ({
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {/* Solve Time */}
             <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {formatTime(stats.solveTime)}
-              </div>
+              <div className="text-2xl font-bold text-blue-600">{formatTime(stats.solveTime)}</div>
               <div className="text-xs text-gray-600 mt-1">Solve Time</div>
             </div>
 
             {/* Mistakes */}
             <div className="bg-red-50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-red-600">
-                {stats.mistakes}
-              </div>
+              <div className="text-2xl font-bold text-red-600">{stats.mistakes}</div>
               <div className="text-xs text-gray-600 mt-1">Mistakes</div>
             </div>
 
             {/* Hints Used */}
             <div className="bg-amber-50 rounded-lg p-4 text-center">
-              <div className="text-2xl font-bold text-amber-600">
-                {stats.hintsUsed}
-              </div>
+              <div className="text-2xl font-bold text-amber-600">{stats.hintsUsed}</div>
               <div className="text-xs text-gray-600 mt-1">Hints Used</div>
             </div>
           </div>

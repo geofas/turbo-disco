@@ -16,7 +16,7 @@ export default function LessonPage() {
   // Find the lesson matching the URL level param
   const lesson = useMemo(() => {
     const levelNum = parseInt(level || '1', 10);
-    return lessons.find((l) => l.level === levelNum);
+    return lessons.find(l => l.level === levelNum);
   }, [level]);
 
   // Check if level is unlocked
@@ -61,14 +61,31 @@ export default function LessonPage() {
       <div className="container-sudoku">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Lesson Not Found</h1>
-          <p className="text-gray-600 mb-6">
-            We couldn't find the lesson for level {level}.
-          </p>
-          <button
-            onClick={() => navigate('/')}
-            className="btn-primary"
-          >
+          <p className="text-gray-600 mb-6">We couldn't find the lesson for level {level}.</p>
+          <button onClick={() => navigate('/')} className="btn-primary">
             Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if level is coming soon (hard gate at level 4+)
+  if (levelNum >= 4) {
+    return (
+      <div className="container-sudoku">
+        <div className="text-center space-y-6 py-12">
+          <div className="text-6xl mb-4">⏰</div>
+          <h1 className="text-4xl font-bold">Level {levelNum} Coming Soon</h1>
+          <p className="text-xl text-gray-700">
+            We're still building lessons for advanced techniques.
+          </p>
+          <p className="text-gray-600 max-w-md mx-auto">
+            Master the fundamentals with Levels 1-3, and check back later for more advanced
+            techniques.
+          </p>
+          <button onClick={() => navigate('/curriculum')} className="btn-primary inline-block">
+            Back to Curriculum
           </button>
         </div>
       </div>
@@ -86,13 +103,12 @@ export default function LessonPage() {
             You need to complete the previous level to unlock this one.
           </p>
           <p className="text-gray-600 max-w-md mx-auto">
-            {levelNum === 2 && "Complete Level 1's lesson and solve at least one puzzle to unlock Level 2."}
-            {levelNum === 3 && "Complete Level 2's lesson and solve at least one puzzle to unlock Level 3."}
+            {levelNum === 2 &&
+              "Complete Level 1's lesson and solve at least one puzzle to unlock Level 2."}
+            {levelNum === 3 &&
+              "Complete Level 2's lesson and solve at least one puzzle to unlock Level 3."}
           </p>
-          <button
-            onClick={() => navigate('/curriculum')}
-            className="btn-primary inline-block"
-          >
+          <button onClick={() => navigate('/curriculum')} className="btn-primary inline-block">
             Back to Curriculum
           </button>
         </div>
@@ -134,15 +150,13 @@ export default function LessonPage() {
       <div className="container-sudoku min-h-screen flex items-center justify-center">
         <div className="text-center space-y-6 max-w-2xl">
           <div className="text-6xl mb-4 animate-pulse">🏆</div>
-          <h1 className="text-4xl md:text-5xl font-bold">
-            Level {lesson?.level} Lesson Complete!
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold">Level {lesson?.level} Lesson Complete!</h1>
           <p className="text-xl text-gray-700">
             You've mastered the <strong>{lesson?.technique}</strong> technique!
           </p>
           <p className="text-gray-600">
-            You're now ready to practice what you've learned. Apply these new
-            skills to solve more puzzles and build your mastery.
+            You're now ready to practice what you've learned. Apply these new skills to solve more
+            puzzles and build your mastery.
           </p>
 
           {/* Countdown timer */}
@@ -188,9 +202,7 @@ export default function LessonPage() {
           ← Back to Lessons
         </button>
         <div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">
-            {lesson.title}
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-2">{lesson.title}</h1>
           <p className="text-lg text-gray-600">{lesson.description}</p>
         </div>
       </div>

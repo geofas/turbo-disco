@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 
 export default function LandingPage() {
   const levels = [
@@ -12,17 +12,17 @@ export default function LandingPage() {
     { level: 8, name: 'Naked Triples' },
     { level: 9, name: 'X-Wing' },
     { level: 10, name: 'XY-Wing' },
-  ]
+  ];
 
-  const unlockedLevels = 3
+  const unlockedLevels = 3;
 
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="container-sudoku py-16 md:py-28">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section className="container-sudoku py-12 sm:py-16 md:py-28">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Left: Text Content */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 sm:gap-6">
             <h1
               className="text-4xl md:text-5xl font-bold leading-tight"
               style={{ color: 'var(--color-neutral-dark)' }}
@@ -33,7 +33,8 @@ export default function LandingPage() {
               className="text-lg md:text-xl leading-relaxed"
               style={{ color: 'var(--color-neutral-dark)' }}
             >
-              Learn Sudoku systematically with our structured curriculum. Each level teaches one solving technique with clear examples, then you practice immediately.
+              Learn Sudoku systematically with our structured curriculum. Each level teaches one
+              solving technique with clear examples, then you practice immediately.
             </p>
 
             {/* CTAs */}
@@ -51,11 +52,11 @@ export default function LandingPage() {
                   borderColor: 'var(--color-primary-blue)',
                   color: 'var(--color-primary-blue)',
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-neutral-light)'
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--color-neutral-light)';
                 }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent'
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
                 Learn More
@@ -63,18 +64,21 @@ export default function LandingPage() {
             </div>
 
             {/* No Account Needed */}
-            <p
-              className="text-sm font-medium"
-              style={{ color: 'var(--color-secondary-teal)' }}
-            >
+            <p className="text-sm font-medium" style={{ color: 'var(--color-secondary-teal)' }}>
               ✓ No account needed to start
             </p>
           </div>
 
           {/* Right: Sudoku Grid Visual */}
           <div className="hidden md:flex justify-center items-center">
-            <div className="p-6 rounded-lg" style={{ backgroundColor: 'var(--color-neutral-light)' }}>
-              <div className="grid grid-cols-3 gap-px" style={{ backgroundColor: 'var(--color-neutral-dark)' }}>
+            <div
+              className="p-6 rounded-lg"
+              style={{ backgroundColor: 'var(--color-neutral-light)' }}
+            >
+              <div
+                className="grid grid-cols-3 gap-px"
+                style={{ backgroundColor: 'var(--color-neutral-dark)' }}
+              >
                 {Array.from({ length: 9 }).map((_, i) => (
                   <div
                     key={i}
@@ -97,9 +101,7 @@ export default function LandingPage() {
         style={{ backgroundColor: 'var(--color-neutral-light)' }}
       >
         <div className="container-sudoku">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-            How It Works
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">How It Works</h2>
 
           <div className="grid md:grid-cols-3 gap-8">
             {/* Step 1 */}
@@ -112,7 +114,8 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-bold mb-4">Learn</h3>
               <p style={{ color: 'var(--color-neutral-dark)' }}>
-                Each level teaches one solving technique with clear examples and step-by-step explanations.
+                Each level teaches one solving technique with clear examples and step-by-step
+                explanations.
               </p>
             </div>
 
@@ -149,13 +152,11 @@ export default function LandingPage() {
 
       {/* Curriculum Preview Section */}
       <section className="container-sudoku py-20">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
-          Your Learning Path
-        </h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">Your Learning Path</h2>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {levels.map((item) => {
-            const isUnlocked = item.level <= unlockedLevels
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {levels.map(item => {
+            const isUnlocked = item.level <= unlockedLevels;
             return (
               <Link
                 key={item.level}
@@ -168,9 +169,9 @@ export default function LandingPage() {
                   border: `2px solid ${isUnlocked ? 'var(--color-primary-blue)' : 'var(--color-neutral-light)'}`,
                   opacity: isUnlocked ? 1 : 0.6,
                 }}
-                onClick={(e) => {
+                onClick={e => {
                   if (!isUnlocked) {
-                    e.preventDefault()
+                    e.preventDefault();
                   }
                 }}
               >
@@ -182,14 +183,15 @@ export default function LandingPage() {
                 >
                   Level {item.level}
                 </div>
-                <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--color-neutral-dark)' }}>
+                <h3
+                  className="font-bold text-lg mb-2"
+                  style={{ color: 'var(--color-neutral-dark)' }}
+                >
                   {item.name}
                 </h3>
-                {!isUnlocked && (
-                  <div className="text-xs text-gray-500">Coming soon</div>
-                )}
+                {!isUnlocked && <div className="text-xs text-gray-500">Coming soon</div>}
               </Link>
-            )
+            );
           })}
         </div>
 
@@ -227,5 +229,5 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

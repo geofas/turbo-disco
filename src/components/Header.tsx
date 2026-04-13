@@ -1,23 +1,23 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '../contexts/useAuth'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/useAuth';
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { user, isGuest, signOut, isLoading } = useAuth()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isGuest, signOut, isLoading } = useAuth();
 
   const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen)
-  }
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      setMobileMenuOpen(false)
+      await signOut();
+      setMobileMenuOpen(false);
     } catch (error) {
-      console.error('Sign out error:', error)
+      console.error('Sign out error:', error);
     }
-  }
+  };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -76,9 +76,7 @@ export default function Header() {
             </Link>
           ) : (
             <div className="flex items-center gap-3">
-              <span style={{ color: 'var(--color-neutral-dark)' }}>
-                {user?.email}
-              </span>
+              <span style={{ color: 'var(--color-neutral-dark)' }}>{user?.email}</span>
               <button
                 onClick={handleSignOut}
                 className="font-medium px-4 py-2 rounded transition-colors"
@@ -116,10 +114,7 @@ export default function Header() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <nav
-          className="md:hidden border-t"
-          style={{ borderColor: 'var(--color-neutral-light)' }}
-        >
+        <nav className="md:hidden border-t" style={{ borderColor: 'var(--color-neutral-light)' }}>
           <div className="container-sudoku py-4 flex flex-col gap-3">
             <Link
               to="/"
@@ -184,5 +179,5 @@ export default function Header() {
         </nav>
       )}
     </header>
-  )
+  );
 }

@@ -40,18 +40,18 @@ export default function PracticePage() {
     usePracticeProgress(typedLevel);
 
   const [viewMode, setViewMode] = useState<ViewMode>('hub');
-  const [activePuzzle, setActivePuzzle] = useState<ActivePuzzleState | null>(
-    null
-  );
+  const [activePuzzle, setActivePuzzle] = useState<ActivePuzzleState | null>(null);
   const [showCompletion, setShowCompletion] = useState(false);
-  const [completionStats, setCompletionStats] = useState<PuzzleSessionStats | null>(
-    null
-  );
+  const [completionStats, setCompletionStats] = useState<PuzzleSessionStats | null>(null);
 
   // Puzzle session management - must call unconditionally even if activePuzzle is null
   // Use dummy values when no active puzzle, hook will create harmless default state
-  const savedState = activePuzzle ? getCurrentPuzzleState(typedLevel, activePuzzle.puzzleNumber.toString()) : null;
-  const dummyGrid: Puzzle['grid'] = Array(9).fill(null).map(() => Array(9).fill(0));
+  const savedState = activePuzzle
+    ? getCurrentPuzzleState(typedLevel, activePuzzle.puzzleNumber.toString())
+    : null;
+  const dummyGrid: Puzzle['grid'] = Array(9)
+    .fill(null)
+    .map(() => Array(9).fill(0));
   const puzzleSession = usePuzzleSession(
     activePuzzle ? activePuzzle.puzzle.grid : dummyGrid,
     activePuzzle ? activePuzzle.puzzle.solution : dummyGrid,
@@ -73,7 +73,8 @@ export default function PracticePage() {
       const stats = puzzleSession.state.stats;
       // Completion detection requires synchronous state updates
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCompletionStats(stats); setShowCompletion(true);
+      setCompletionStats(stats);
+      setShowCompletion(true);
       puzzleSession.pauseTimer();
     }
   }, [activePuzzle, puzzleSession.state.isComplete, showCompletion, puzzleSession]);
@@ -86,12 +87,31 @@ export default function PracticePage() {
     return (
       <div className="container-sudoku text-center py-12">
         <h1 className="text-red-600">Invalid level</h1>
-        <button
-          onClick={() => navigate('/curriculum')}
-          className="btn-primary mt-4"
-        >
+        <button onClick={() => navigate('/curriculum')} className="btn-primary mt-4">
           Back to Curriculum
         </button>
+      </div>
+    );
+  }
+
+  // Redirect if level is coming soon (hard gate at level 4+)
+  if (level >= 4) {
+    return (
+      <div className="container-sudoku">
+        <div className="text-center space-y-6 py-12">
+          <div className="text-6xl mb-4">⏰</div>
+          <h1 className="text-4xl font-bold">Level {level} Coming Soon</h1>
+          <p className="text-xl text-gray-700">
+            We're still building practice puzzles for advanced techniques.
+          </p>
+          <p className="text-gray-600 max-w-md mx-auto">
+            Master the fundamentals with Levels 1-3, and check back later for more advanced
+            techniques.
+          </p>
+          <button onClick={() => navigate('/curriculum')} className="btn-primary inline-block">
+            Back to Curriculum
+          </button>
+        </div>
       </div>
     );
   }
@@ -106,13 +126,12 @@ export default function PracticePage() {
             You need to complete the previous level to unlock this one.
           </p>
           <p className="text-gray-600 max-w-md mx-auto">
-            {level === 2 && "Complete Level 1's lesson and solve at least one puzzle to unlock Level 2 practice."}
-            {level === 3 && "Complete Level 2's lesson and solve at least one puzzle to unlock Level 3 practice."}
+            {level === 2 &&
+              "Complete Level 1's lesson and solve at least one puzzle to unlock Level 2 practice."}
+            {level === 3 &&
+              "Complete Level 2's lesson and solve at least one puzzle to unlock Level 3 practice."}
           </p>
-          <button
-            onClick={() => navigate('/curriculum')}
-            className="btn-primary inline-block"
-          >
+          <button onClick={() => navigate('/curriculum')} className="btn-primary inline-block">
             Back to Curriculum
           </button>
         </div>
@@ -142,11 +161,7 @@ export default function PracticePage() {
   };
 
   const handleCompletionOverlayNext = () => {
-    if (
-      activePuzzle &&
-      completionStats &&
-      puzzleSession
-    ) {
+    if (activePuzzle && completionStats && puzzleSession) {
       completePuzzle(
         activePuzzle.puzzleNumber,
         completionStats.solveTime,
@@ -155,7 +170,7 @@ export default function PracticePage() {
     }
 
     // Move to next puzzle or back to hub
-    const nextPuzzleNum = (activePuzzle!.puzzleNumber % 3) + 1 as 1 | 2 | 3;
+    const nextPuzzleNum = ((activePuzzle!.puzzleNumber % 3) + 1) as 1 | 2 | 3;
     const nextPuzzle = getPuzzle(typedLevel, nextPuzzleNum);
     startPuzzle(nextPuzzleNum);
     setActivePuzzle({ puzzleNumber: nextPuzzleNum, puzzle: nextPuzzle });
@@ -165,11 +180,7 @@ export default function PracticePage() {
   };
 
   const handleCompletionOverlayBack = () => {
-    if (
-      activePuzzle &&
-      completionStats &&
-      puzzleSession
-    ) {
+    if (activePuzzle && completionStats && puzzleSession) {
       completePuzzle(
         activePuzzle.puzzleNumber,
         completionStats.solveTime,
@@ -197,24 +208,18 @@ export default function PracticePage() {
             ← Back to Curriculum
           </button>
           <h1 className="mb-2">Practice Level {typedLevel}</h1>
-          <p className="text-gray-600">
-            Master the techniques with guided puzzles
-          </p>
+          <p className="text-gray-600">Master the techniques with guided puzzles</p>
         </div>
 
         {/* Progress Summary */}
         <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">
-                {stats.completed}
-              </div>
+              <div className="text-3xl font-bold text-blue-600">{stats.completed}</div>
               <div className="text-xs text-gray-600 mt-1">Completed</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-amber-600">
-                {stats.inProgress}
-              </div>
+              <div className="text-3xl font-bold text-amber-600">{stats.inProgress}</div>
               <div className="text-xs text-gray-600 mt-1">In Progress</div>
             </div>
             <div className="text-center">
@@ -228,7 +233,7 @@ export default function PracticePage() {
 
         {/* Puzzle Tiles Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((num) => {
+          {[1, 2, 3].map(num => {
             const puzzleNum = num as 1 | 2 | 3;
             const progress = getPuzzleProgress(puzzleNum);
             const metadata = getPuzzleMetadata(typedLevel, puzzleNum);
@@ -255,21 +260,21 @@ export default function PracticePage() {
     return (
       <div className="container-sudoku py-8">
         {/* Header Bar */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+          <div className="min-w-0">
             <button
               onClick={handleBackFromPuzzle}
               className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2 mb-2"
             >
               ← Back to Level
             </button>
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-xl sm:text-2xl font-bold break-words">
               Level {typedLevel} · Puzzle #{activePuzzle.puzzleNumber}
             </h2>
           </div>
 
           {/* Timer */}
-          <div className="bg-blue-50 rounded-lg px-6 py-4 border border-blue-200">
+          <div className="bg-blue-50 rounded-lg px-4 sm:px-6 py-3 sm:py-4 border border-blue-200 w-full sm:w-auto">
             <Timer
               seconds={puzzleSession.state.timer}
               isRunning={puzzleSession.state.isRunning}
@@ -280,18 +285,14 @@ export default function PracticePage() {
         </div>
 
         {/* Stats Bar */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-red-50 rounded-lg p-4 border border-red-200">
             <div className="text-sm text-gray-600">Mistakes</div>
-            <div className="text-2xl font-bold text-red-600">
-              {puzzleSession.state.mistakes}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{puzzleSession.state.mistakes}</div>
           </div>
           <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
             <div className="text-sm text-gray-600">Hints Used</div>
-            <div className="text-2xl font-bold text-amber-600">
-              {puzzleSession.state.hintsUsed}
-            </div>
+            <div className="text-2xl font-bold text-amber-600">{puzzleSession.state.hintsUsed}</div>
           </div>
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
             <button
@@ -305,7 +306,7 @@ export default function PracticePage() {
         </div>
 
         {/* Puzzle Grid */}
-        <div className="bg-white rounded-lg p-8 border border-gray-200 flex justify-center">
+        <div className="bg-white rounded-lg p-4 sm:p-8 border border-gray-200 flex justify-center overflow-x-auto">
           <PuzzleGrid
             puzzle={puzzleSession.state.puzzle}
             solution={puzzleSession.state.solution}
