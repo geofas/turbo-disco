@@ -5,20 +5,23 @@ import LessonPage from './pages/LessonPage'
 import PracticePage from './pages/PracticePage'
 import CurriculumPage from './pages/CurriculumPage'
 import ProfilePage from './pages/ProfilePage'
+import { ProgressProvider } from './contexts/ProgressContext'
 import './index.css'
 
 function App() {
   return (
-    <Router>
-      <Header />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/lesson/:level" element={<LessonPage />} />
-        <Route path="/practice/:level" element={<PracticePage />} />
-        <Route path="/curriculum" element={<CurriculumPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-      </Routes>
-    </Router>
+    <ProgressProvider>
+      <Router>
+        <Header />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/lesson/:level" element={<LessonPage />} />
+          <Route path="/practice/:level" element={<PracticePage />} />
+          <Route path="/curriculum" element={<CurriculumPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Routes>
+      </Router>
+    </ProgressProvider>
   )
 }
 
