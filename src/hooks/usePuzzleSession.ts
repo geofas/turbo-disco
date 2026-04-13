@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Grid } from '../lib/puzzle-solver';
 import { generateHint, type Hint } from '../lib/hint-engine';
+import { savePuzzleState, clearPuzzleState, type PuzzleState } from '../lib/progress-store';
 
 export interface PuzzleSessionStats {
   solveTime: number; // in seconds
@@ -70,26 +71,34 @@ function isPuzzleComplete(userValues: Grid, solution: Grid): boolean {
   return true;
 }
 
-export function usePuzzleSession(initialPuzzle: Grid, solution: Grid): UsePuzzleSessionReturn {
+export function usePuzzleSession(
+  initialPuzzle: Grid,
+  solution: Grid,
+  level?: number,
+  puzzleNumber?: number,
+  savedState?: PuzzleState | null
+): UsePuzzleSessionReturn {
+  // Use saved state if available, otherwise initialize fresh
   const [state, setState] = useState<PuzzleSessionState>({
     puzzle: initialPuzzle,
     solution,
-    userValues: initialPuzzle.map((row) => [...row]),
-    timer: 0,
+    userValues: savedState?.userValues ?? initialPuzzle.map((row) => [...row]),
+    timer: savedState?.timer ?? 0,
     isRunning: false,
-    mistakes: 0,
-    hintsUsed: 0,
+    mistakes: savedState?.mistakes ?? 0,
+    hintsUsed: savedState?.hintsUsed ?? 0,
     isComplete: false,
     stats: {
       solveTime: 0,
-      mistakes: 0,
-      hintsUsed: 0,
+      mistakes: savedState?.mistakes ?? 0,
+      hintsUsed: savedState?.hintsUsed ?? 0,
       isComplete: false,
       starRating: 3
     },
     currentHint: null,
     hintCount: 0
   });
+
 
   // Timer effect
   useEffect(() => {
@@ -112,6 +121,7 @@ export function usePuzzleSession(initialPuzzle: Grid, solution: Grid): UsePuzzle
     if (!state.isComplete && state.isRunning) {
       const isComplete = isPuzzleComplete(state.userValues, solution);
       if (isComplete) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- completion detection must update state
         setState((prevState) => {
           const newStats: PuzzleSessionStats = {
             solveTime: prevState.timer,
@@ -130,6 +140,54 @@ export function usePuzzleSession(initialPuzzle: Grid, solution: Grid): UsePuzzle
       }
     }
   }, [state.userValues, solution, state.isComplete, state.isRunning]);
+
+  // Auto-save every 10 seconds
+  useEffect(() => {
+    if (!level || !puzzleNumber) return; // Don't save if level/puzzleNumber not provided
+
+    const interval = setInterval(() => {
+      if (state.isRunning && !state.isComplete) {
+        // Convert candidates Set to array format for JSON serialization
+        const candidatesToSave: Record<string, number[]> = {};
+        // Note: We'll need to get candidates from the grid component since they're not stored here
+        // For now, we'll pass an empty object - the grid component will handle local candidate state
+
+        const puzzleState: PuzzleState = {
+          userValues: state.userValues,
+          candidates: candidatesToSave,
+          timer: state.timer,
+          mistakes: state.mistakes,
+          hintsUsed: state.hintsUsed
+        };
+
+        savePuzzleState(level, puzzleNumber.toString(), puzzleState);
+      }
+    }, 10000); // Every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [state.userValues, state.timer, state.mistakes, state.hintsUsed, state.isRunning, state.isComplete, level, puzzleNumber]);
+
+  // Auto-save on beforeunload
+  useEffect(() => {
+    if (!level || !puzzleNumber) return;
+
+    const handleBeforeUnload = () => {
+      if (!state.isComplete) {
+        const candidatesToSave: Record<string, number[]> = {};
+        const puzzleState: PuzzleState = {
+          userValues: state.userValues,
+          candidates: candidatesToSave,
+          timer: state.timer,
+          mistakes: state.mistakes,
+          hintsUsed: state.hintsUsed
+        };
+        savePuzzleState(level, puzzleNumber.toString(), puzzleState);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [state.userValues, state.timer, state.mistakes, state.hintsUsed, state.isComplete, level, puzzleNumber]);
 
   const startPuzzle = useCallback(() => {
     setState((prevState) => ({
@@ -204,6 +262,10 @@ export function usePuzzleSession(initialPuzzle: Grid, solution: Grid): UsePuzzle
   }, [solution]);
 
   const resetPuzzle = useCallback(() => {
+    // Clear saved state when resetting
+    if (level && puzzleNumber) {
+      clearPuzzleState(level);
+    }
     setState({
       puzzle: initialPuzzle,
       solution,
@@ -223,7 +285,7 @@ export function usePuzzleSession(initialPuzzle: Grid, solution: Grid): UsePuzzle
       currentHint: null,
       hintCount: 0
     });
-  }, [initialPuzzle, solution]);
+  }, [initialPuzzle, solution, level, puzzleNumber]);
 
   return {
     state,

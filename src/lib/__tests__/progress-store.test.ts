@@ -40,7 +40,7 @@ describe('Progress Store', () => {
   beforeEach(() => {
     // Mock localStorage before each test
     localStorageMock = new LocalStorageMock();
-    (globalThis as any).localStorage = localStorageMock as any;
+    (globalThis as unknown as { localStorage: Storage }).localStorage = localStorageMock as Storage;
   });
 
   afterEach(() => {
@@ -300,7 +300,7 @@ describe('Progress Store', () => {
   describe('Edge Cases', () => {
     it('should handle localStorage unavailable gracefully', () => {
       // Set localStorage to throw
-      (globalThis as any).localStorage = {
+      (globalThis as unknown as { localStorage: Storage }).localStorage = {
         getItem: () => null,
         setItem: () => {
           throw new Error('Storage unavailable');
@@ -309,7 +309,7 @@ describe('Progress Store', () => {
         clear: () => {},
         key: () => null,
         length: 0,
-      } as any;
+      } as Storage;
 
       // Should not throw, just continue
       expect(() => {

@@ -1,11 +1,22 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/useAuth'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { user, isGuest, signOut, isLoading } = useAuth()
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      setMobileMenuOpen(false)
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
   }
 
   return (
@@ -28,7 +39,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex gap-8">
+        <nav className="hidden md:flex gap-8 items-center">
           <Link
             to="/"
             className="font-medium transition-colors hover:opacity-70"
@@ -50,6 +61,36 @@ export default function Header() {
           >
             Profile
           </Link>
+
+          {/* Auth Section */}
+          {isLoading ? null : isGuest ? (
+            <Link
+              to="/auth"
+              className="font-medium px-4 py-2 rounded transition-colors"
+              style={{
+                backgroundColor: 'var(--color-primary-blue)',
+                color: 'white',
+              }}
+            >
+              Sign In
+            </Link>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span style={{ color: 'var(--color-neutral-dark)' }}>
+                {user?.email}
+              </span>
+              <button
+                onClick={handleSignOut}
+                className="font-medium px-4 py-2 rounded transition-colors"
+                style={{
+                  backgroundColor: 'var(--color-neutral-light)',
+                  color: 'var(--color-neutral-dark)',
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* Mobile Menu Button */}
@@ -104,6 +145,41 @@ export default function Header() {
             >
               Profile
             </Link>
+
+            {/* Mobile Auth Section */}
+            {!isLoading && (
+              <div className="py-2 border-t" style={{ borderColor: 'var(--color-neutral-light)' }}>
+                {isGuest ? (
+                  <Link
+                    to="/auth"
+                    className="font-medium block py-2 px-4 rounded"
+                    style={{
+                      backgroundColor: 'var(--color-primary-blue)',
+                      color: 'white',
+                    }}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                ) : (
+                  <>
+                    <div className="py-2 px-4" style={{ color: 'var(--color-neutral-dark)' }}>
+                      {user?.email}
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left font-medium py-2 px-4 rounded transition-colors"
+                      style={{
+                        backgroundColor: 'var(--color-neutral-light)',
+                        color: 'var(--color-neutral-dark)',
+                      }}
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </nav>
       )}

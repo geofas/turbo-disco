@@ -153,7 +153,7 @@ describe('Puzzle Validator', () => {
         .fill(0)
         .map(() => Array(9).fill(0));
 
-      (grid[0] as any) = [1, 2, 3]; // Too few cells
+      (grid[0] as unknown as number[]) = [1, 2, 3]; // Too few cells
 
       const result = validatePuzzleGrid(grid);
 
@@ -262,7 +262,8 @@ describe('Puzzle Validator', () => {
     });
 
     it('should return null after max retries fail', () => {
-      const mockGenerator = (_level: 1 | 2 | 3) => {
+      const mockGenerator = (level: 1 | 2 | 3) => {
+        void level; // Parameter preserved for API compatibility
         // Return invalid puzzle
         const grid: Grid = Array(9)
           .fill(0)
@@ -385,7 +386,7 @@ describe('Puzzle Validator', () => {
     it('should handle non-integer values gracefully', () => {
       const grid = Array(9)
         .fill(0)
-        .map(() => Array(9).fill(0)) as any;
+        .map(() => Array(9).fill(0)) as unknown as number[][];
 
       grid[0][0] = 3.5; // Non-integer
 

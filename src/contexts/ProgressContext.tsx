@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useState, useEffect, type ReactNode } from 'react';
 import {
   getProgress,
   updateLessonComplete,
@@ -11,7 +11,7 @@ import {
   type PuzzleState,
 } from '../lib/progress-store';
 
-interface ProgressContextType {
+export interface ProgressContextType {
   progress: Progress | null;
   isLoading: boolean;
 
@@ -34,7 +34,8 @@ interface ProgressContextType {
   clearPuzzleState: (level: number) => void;
 }
 
-const ProgressContext = createContext<ProgressContextType | undefined>(
+// eslint-disable-next-line react-refresh/only-export-components -- context must be co-located with provider
+export const ProgressContext = createContext<ProgressContextType | undefined>(
   undefined
 );
 
@@ -133,13 +134,4 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   );
 }
 
-/**
- * Hook to access progress context
- */
-export function useProgress(): ProgressContextType {
-  const context = useContext(ProgressContext);
-  if (context === undefined) {
-    throw new Error('useProgress must be used within a ProgressProvider');
-  }
-  return context;
-}
+// useProgress hook moved to ./useProgress.ts for react-refresh compatibility

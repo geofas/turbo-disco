@@ -292,8 +292,9 @@ function getTechniqueNames(result: SolveResult): string[] {
 export function generatePuzzle(
   seedOrLevel: number | 1 | 2 | 3,
   levelOrOptions?: 1 | 2 | 3 | { seed?: string },
-  _reserved?: string // for backward compat
+  reserved?: string // for backward compat
 ): Puzzle {
+  void reserved; // Parameter preserved for API compatibility
   let numericSeed: number;
   let level: 1 | 2 | 3;
   let useRandomness = false;

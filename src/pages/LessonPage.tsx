@@ -2,12 +2,12 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { lessons } from '../data/lessons';
 import { LessonStep } from '../components/LessonStep';
-import { useProgress } from '../contexts/ProgressContext';
+import { useProgress } from '../contexts/useProgress';
 
 export default function LessonPage() {
   const { level } = useParams<{ level: string }>();
   const navigate = useNavigate();
-  const { completeLessonForLevel } = useProgress();
+  const { completeLessonForLevel, isLevelUnlocked } = useProgress();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
@@ -18,6 +18,10 @@ export default function LessonPage() {
     const levelNum = parseInt(level || '1', 10);
     return lessons.find((l) => l.level === levelNum);
   }, [level]);
+
+  // Check if level is unlocked
+  const levelNum = parseInt(level || '1', 10);
+  const isUnlocked = isLevelUnlocked(levelNum);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -65,6 +69,31 @@ export default function LessonPage() {
             className="btn-primary"
           >
             Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if level is not unlocked
+  if (!isUnlocked) {
+    return (
+      <div className="container-sudoku">
+        <div className="text-center space-y-6 py-12">
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-4xl font-bold">Level {levelNum} Locked</h1>
+          <p className="text-xl text-gray-700">
+            You need to complete the previous level to unlock this one.
+          </p>
+          <p className="text-gray-600 max-w-md mx-auto">
+            {levelNum === 2 && "Complete Level 1's lesson and solve at least one puzzle to unlock Level 2."}
+            {levelNum === 3 && "Complete Level 2's lesson and solve at least one puzzle to unlock Level 3."}
+          </p>
+          <button
+            onClick={() => navigate('/curriculum')}
+            className="btn-primary inline-block"
+          >
+            Back to Curriculum
           </button>
         </div>
       </div>

@@ -4,7 +4,7 @@
  * Includes celebratory CSS animation
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { PuzzleSessionStats } from '../hooks/usePuzzleSession';
 
 interface CompletionOverlayProps {
@@ -67,13 +67,20 @@ export const CompletionOverlay: React.FC<CompletionOverlayProps> = ({
     }
   `;
 
-  // Generate confetti pieces
-  const generateConfetti = () => {
+  // Generate confetti pieces with deterministic pseudo-random based on index
+  const confettiPieces = useMemo(() => {
     const pieces = [];
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
+
     for (let i = 0; i < 50; i++) {
-      const left = Math.random() * 100;
-      const delay = Math.random() * 0.5;
-      const duration = 2 + Math.random() * 1;
+      // Use deterministic pseudo-random based on index
+      const seed = (i * 73) % 100;
+      const left = (seed * 100) / 100;
+      const delay = ((seed * 17) % 50) / 100;
+      const duration = 2 + ((seed * 31) % 100) / 100;
+      const colorIndex = (seed * 13) % colors.length;
+      const isCircle = seed % 2 === 0;
+
       pieces.push(
         <div
           key={i}
@@ -83,27 +90,21 @@ export const CompletionOverlay: React.FC<CompletionOverlayProps> = ({
             top: '-10px',
             width: '10px',
             height: '10px',
-            backgroundColor: [
-              '#FF6B6B',
-              '#4ECDC4',
-              '#45B7D1',
-              '#FFA07A',
-              '#98D8C8'
-            ][Math.floor(Math.random() * 5)],
+            backgroundColor: colors[colorIndex],
             animation: `confetti-fall ${duration}s ease-in forwards`,
             animationDelay: `${delay}s`,
-            borderRadius: Math.random() > 0.5 ? '50%' : '0'
+            borderRadius: isCircle ? '50%' : '0'
           }}
         />
       );
     }
     return pieces;
-  };
+  }, []);
 
   return (
     <>
       <style>{confettiStyle}</style>
-      {generateConfetti()}
+      {confettiPieces}
 
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full mx-4 animate-in fade-in zoom-in">

@@ -50,6 +50,21 @@ export const LessonStep: React.FC<LessonStepProps> = ({
     return step.highlightCells || [];
   }, [step.highlightSequence, step.highlightCells]);
 
+  // Pre-compute confetti pieces with deterministic pseudo-random based on index
+  const confettiPieces = useMemo(() => {
+    const colors = ['#34d399', '#60a5fa', '#fbbf24', '#f87171', '#a78bfa'];
+    return Array.from({ length: 12 }).map((_, i) => {
+      const seed = (i * 73) % 100;
+      const left = (seed * 100) / 100;
+      return {
+        i,
+        left,
+        color: colors[i % 5],
+        delay: i * 0.05,
+      };
+    });
+  }, []);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -254,15 +269,15 @@ export const LessonStep: React.FC<LessonStepProps> = ({
 
                 {/* Confetti elements */}
                 {showConfetti &&
-                  Array.from({ length: 12 }).map((_, i) => (
+                  confettiPieces.map(({ i, left, color, delay }) => (
                     <div
                       key={`confetti-${i}`}
                       className="confetti"
                       style={{
-                        left: `${Math.random() * 100}%`,
+                        left: `${left}%`,
                         top: '50%',
-                        backgroundColor: ['#34d399', '#60a5fa', '#fbbf24', '#f87171', '#a78bfa'][i % 5],
-                        animationDelay: `${i * 0.05}s`,
+                        backgroundColor: color,
+                        animationDelay: `${delay}s`,
                       }}
                     />
                   ))}

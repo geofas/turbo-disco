@@ -19,9 +19,12 @@ export interface PuzzleStats {
 }
 
 export interface PuzzleState {
-  grid: string; // serialized 81-char string
-  candidates: Record<number, number[]>; // per-cell candidate tracking (as arrays since JSON doesn't support Sets)
-  notes?: Record<number, string>; // optional user notes
+  userValues: number[][]; // current grid state with user entries (9x9 array)
+  candidates: Record<string, number[]>; // per-cell candidate tracking as row-col key (e.g., "0-1")
+  timer: number; // elapsed time in seconds
+  mistakes: number; // count of incorrect entries
+  hintsUsed: number; // count of hints used
+  notes?: Record<string, string>; // optional user notes
 }
 
 export interface LevelProgress {
@@ -193,8 +196,9 @@ export function isLevelUnlocked(level: number): boolean {
  */
 export function getCurrentPuzzleState(
   level: number,
-  _puzzleId: string
+  puzzleId: string // Parameter preserved for API compatibility
 ): PuzzleState | null {
+  void puzzleId; // Intentionally unused for future extensibility
   const progress = getProgress();
   return progress.levels[level]?.currentPuzzleState ?? null;
 }
@@ -204,9 +208,10 @@ export function getCurrentPuzzleState(
  */
 export function savePuzzleState(
   level: number,
-  _puzzleId: string,
+  puzzleId: string, // Parameter preserved for API compatibility
   state: PuzzleState
 ): void {
+  void puzzleId; // Intentionally unused for future extensibility
   const progress = getProgress();
 
   if (!progress.levels[level]) {

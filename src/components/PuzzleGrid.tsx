@@ -54,6 +54,14 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
   const [candidates, setCandidates] = useState<CandidateMap>({});
   const [pencilMode, setPencilMode] = useState(false);
 
+  // Sync external selectedCell prop
+  useEffect(() => {
+    if (externalSelectedCell) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync from prop
+      setSelectedCell(externalSelectedCell);
+    }
+  }, [externalSelectedCell]);
+
   // Helper to get valid candidates for a cell (numbers 1-9 not in row/col/box)
   const getValidCandidates = useCallback(
     (row: number, col: number): Set<number> => {
@@ -96,13 +104,6 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
     },
     [userValues]
   );
-
-  // Sync external selectedCell prop
-  useEffect(() => {
-    if (externalSelectedCell) {
-      setSelectedCell(externalSelectedCell);
-    }
-  }, [externalSelectedCell]);
 
   // Helper to check if a value conflicts in a row
   const hasRowConflict = (row: number, col: number, value: number): boolean => {
@@ -230,7 +231,7 @@ export const PuzzleGrid: React.FC<PuzzleGridProps> = ({
   }, [selectedCell, puzzle, userValues, candidates, onCellChange]);
 
   const handleShowAllCandidates = useCallback(() => {
-    const newCandidates: CandidateMap = { ...candidates };
+    const newCandidates: CandidateMap = {};
 
     for (let row = 0; row < 9; row++) {
       for (let col = 0; col < 9; col++) {

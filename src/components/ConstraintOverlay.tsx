@@ -17,7 +17,6 @@ interface ConstraintOverlayProps {
 export const ConstraintOverlay: React.FC<ConstraintOverlayProps> = ({
   visible,
   constraints,
-  technique: _technique,
 }) => {
   if (!visible || constraints.length === 0) {
     return null;

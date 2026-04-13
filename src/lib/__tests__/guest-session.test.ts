@@ -34,7 +34,7 @@ describe('Guest Session Manager', () => {
 
   beforeEach(() => {
     localStorageMock = new LocalStorageMock();
-    global.localStorage = localStorageMock as any;
+    global.localStorage = localStorageMock as Storage;
   });
 
   afterEach(() => {
@@ -111,7 +111,7 @@ describe('Guest Session Manager', () => {
         clear: () => {},
         key: () => null,
         length: 0,
-      } as any;
+      } as Storage;
 
       const session = createGuestSession();
       expect(session).toBeDefined();
@@ -197,7 +197,7 @@ describe('Guest Session Manager', () => {
       if (savedData) {
         newStorageMock.setItem('sudoku-trainer-guest', savedData);
       }
-      global.localStorage = newStorageMock as any;
+      global.localStorage = newStorageMock as Storage;
 
       const session2 = getOrCreateGuestSession();
       expect(session2.sessionId).toBe(sessionId1);

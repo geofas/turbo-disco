@@ -14,6 +14,8 @@ import { Timer } from '../components/Timer';
 import { usePuzzleSession } from '../hooks/usePuzzleSession';
 import { usePracticeProgress } from '../hooks/usePracticeProgress';
 import { getPuzzle, getPuzzleMetadata } from '../data/puzzles';
+import { useProgress } from '../contexts/useProgress';
+import { getCurrentPuzzleState } from '../lib/progress-store';
 import type { PuzzleSessionStats } from '../hooks/usePuzzleSession';
 import type { Puzzle } from '../lib/puzzle-generator';
 
@@ -27,10 +29,60 @@ interface ActivePuzzleState {
 export default function PracticePage() {
   const { level: levelParam } = useParams();
   const navigate = useNavigate();
+  const { isLevelUnlocked } = useProgress();
 
-  // Validate level
+  // All hooks must be declared before any conditional logic
   const level = levelParam ? parseInt(levelParam, 10) : 0;
-  if (![1, 2, 3].includes(level)) {
+  const isValidLevel = [1, 2, 3].includes(level);
+  const typedLevel = (isValidLevel ? level : 1) as 1 | 2 | 3;
+
+  const { getPuzzleProgress, startPuzzle, completePuzzle, getLevelStats } =
+    usePracticeProgress(typedLevel);
+
+  const [viewMode, setViewMode] = useState<ViewMode>('hub');
+  const [activePuzzle, setActivePuzzle] = useState<ActivePuzzleState | null>(
+    null
+  );
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [completionStats, setCompletionStats] = useState<PuzzleSessionStats | null>(
+    null
+  );
+
+  // Puzzle session management - must call unconditionally even if activePuzzle is null
+  // Use dummy values when no active puzzle, hook will create harmless default state
+  const savedState = activePuzzle ? getCurrentPuzzleState(typedLevel, activePuzzle.puzzleNumber.toString()) : null;
+  const dummyGrid: Puzzle['grid'] = Array(9).fill(null).map(() => Array(9).fill(0));
+  const puzzleSession = usePuzzleSession(
+    activePuzzle ? activePuzzle.puzzle.grid : dummyGrid,
+    activePuzzle ? activePuzzle.puzzle.solution : dummyGrid,
+    activePuzzle ? typedLevel : undefined,
+    activePuzzle ? activePuzzle.puzzleNumber : undefined,
+    savedState
+  );
+
+  // Start solving when view changes
+  useEffect(() => {
+    if (viewMode === 'solving' && activePuzzle) {
+      puzzleSession.startPuzzle();
+    }
+  }, [viewMode, activePuzzle, puzzleSession]);
+
+  // Check for completion
+  useEffect(() => {
+    if (activePuzzle && puzzleSession.state.isComplete && !showCompletion) {
+      const stats = puzzleSession.state.stats;
+      // Completion detection requires synchronous state updates
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCompletionStats(stats); setShowCompletion(true);
+      puzzleSession.pauseTimer();
+    }
+  }, [activePuzzle, puzzleSession.state.isComplete, showCompletion, puzzleSession]);
+
+  // Now we can do conditional validation logic after all hooks
+  const isLevelUnlockedValue = isLevelUnlocked(level);
+
+  // Render validation error pages
+  if (!isValidLevel) {
     return (
       <div className="container-sudoku text-center py-12">
         <h1 className="text-red-600">Invalid level</h1>
@@ -44,40 +96,29 @@ export default function PracticePage() {
     );
   }
 
-  const typedLevel = level as 1 | 2 | 3;
-  const { getPuzzleProgress, startPuzzle, completePuzzle, getLevelStats } =
-    usePracticeProgress(typedLevel);
-
-  const [viewMode, setViewMode] = useState<ViewMode>('hub');
-  const [activePuzzle, setActivePuzzle] = useState<ActivePuzzleState | null>(
-    null
-  );
-  const [showCompletion, setShowCompletion] = useState(false);
-  const [completionStats, setCompletionStats] = useState<PuzzleSessionStats | null>(
-    null
-  );
-
-  // Puzzle session management
-  const puzzleSession = activePuzzle
-    ? usePuzzleSession(activePuzzle.puzzle.grid, activePuzzle.puzzle.solution)
-    : null;
-
-  // Start solving when view changes
-  useEffect(() => {
-    if (viewMode === 'solving' && puzzleSession) {
-      puzzleSession.startPuzzle();
-    }
-  }, [viewMode, puzzleSession]);
-
-  // Check for completion
-  useEffect(() => {
-    if (puzzleSession?.state.isComplete && !showCompletion) {
-      const stats = puzzleSession.state.stats;
-      setCompletionStats(stats);
-      setShowCompletion(true);
-      puzzleSession.pauseTimer();
-    }
-  }, [puzzleSession?.state.isComplete, showCompletion, puzzleSession]);
+  if (!isLevelUnlockedValue) {
+    return (
+      <div className="container-sudoku">
+        <div className="text-center space-y-6 py-12">
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-4xl font-bold">Level {level} Locked</h1>
+          <p className="text-xl text-gray-700">
+            You need to complete the previous level to unlock this one.
+          </p>
+          <p className="text-gray-600 max-w-md mx-auto">
+            {level === 2 && "Complete Level 1's lesson and solve at least one puzzle to unlock Level 2 practice."}
+            {level === 3 && "Complete Level 2's lesson and solve at least one puzzle to unlock Level 3 practice."}
+          </p>
+          <button
+            onClick={() => navigate('/curriculum')}
+            className="btn-primary inline-block"
+          >
+            Back to Curriculum
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Handlers
   const handlePuzzleTileClick = (puzzleNumber: 1 | 2 | 3) => {
@@ -210,7 +251,7 @@ export default function PracticePage() {
   }
 
   // SOLVING VIEW
-  if (viewMode === 'solving' && activePuzzle && puzzleSession) {
+  if (viewMode === 'solving' && activePuzzle) {
     return (
       <div className="container-sudoku py-8">
         {/* Header Bar */}
