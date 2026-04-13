@@ -111,32 +111,38 @@ export const PUZZLES: PuzzleMeta[] = [
 export const PUZZLES_BY_LEVEL = {
   1: PUZZLES.filter(p => p.level === 1),
   2: PUZZLES.filter(p => p.level === 2),
-  3: PUZZLES.filter(p => p.level === 3),
+  3: PUZZLES.filter(p => p.level === 3)
 };
 
-export function getPuzzle(level: 1 | 2 | 3, puzzleNumber: 1 | 2 | 3) {
-  const puzzles = PUZZLES_BY_LEVEL[level];
-  const meta = puzzles[puzzleNumber - 1];
-  if (!meta) throw new Error(`Puzzle not found: L${level}-${puzzleNumber}`);
-  return {
-    grid: meta.grid.map((row) => [...row]),
-    solution: meta.solution.map((row) => [...row]),
-    level: meta.level,
-    difficulty: meta.difficulty,
-    filledCells: meta.filledCells,
-    techniques: meta.techniques,
-    generationTime: 0,
-  };
+/**
+ * Puzzle type compatible with puzzle-generator.ts Puzzle interface.
+ * Adds generationTime (always 0 for pre-generated puzzles).
+ */
+export type PuzzleFromData = PuzzleMeta & { generationTime: number };
+
+/**
+ * Get a specific puzzle by level and puzzle number (1-indexed).
+ * Returns the puzzle data formatted for the PuzzleGrid component.
+ */
+export function getPuzzle(level: number, puzzleNumber: number): PuzzleFromData {
+  const levelPuzzles = PUZZLES_BY_LEVEL[level as keyof typeof PUZZLES_BY_LEVEL];
+  const meta = (levelPuzzles && puzzleNumber >= 1 && puzzleNumber <= levelPuzzles.length)
+    ? levelPuzzles[puzzleNumber - 1]
+    : (levelPuzzles?.[0] ?? PUZZLES[0]);
+  return { ...meta, generationTime: 0 };
 }
 
-export function getPuzzleMetadata(level: 1 | 2 | 3, puzzleNumber: 1 | 2 | 3) {
-  const puzzles = PUZZLES_BY_LEVEL[level];
-  const meta = puzzles[puzzleNumber - 1];
-  if (!meta) throw new Error(`Puzzle metadata not found: L${level}-${puzzleNumber}`);
+/**
+ * Get metadata for a specific puzzle at a given level.
+ * Used by PracticePage to display puzzle tile info.
+ */
+export function getPuzzleMetadata(level: number, puzzleNumber: number): Pick<PuzzleMeta, 'id' | 'level' | 'filledCells' | 'techniques' | 'difficulty'> {
+  const puzzle = getPuzzle(level, puzzleNumber);
   return {
-    id: meta.id,
-    difficulty: meta.difficulty,
-    filledCells: meta.filledCells,
-    techniques: meta.techniques,
+    id: puzzle.id,
+    level: puzzle.level,
+    filledCells: puzzle.filledCells,
+    techniques: puzzle.techniques,
+    difficulty: puzzle.difficulty,
   };
 }
