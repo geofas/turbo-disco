@@ -13,11 +13,13 @@
   }
 
   body {
-    @apply bg-neutral-light text-neutral-dark;
+    background-color: var(--color-neutral-light);
+    color: var(--color-neutral-dark);
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply text-neutral-dark font-semibold;
+    @apply font-semibold;
+    color: var(--color-neutral-dark);
   }
 
   h1 {
@@ -37,19 +39,27 @@
   }
 
   .btn-primary {
-    @apply bg-primary-blue text-white hover:bg-blue-700;
+    background-color: var(--color-primary-blue);
+    color: white;
+    @apply hover:opacity-90;
   }
 
   .btn-secondary {
-    @apply bg-secondary-teal text-white hover:bg-teal-700;
+    background-color: var(--color-secondary-teal);
+    color: white;
+    @apply hover:opacity-90;
   }
 
   .btn-success {
-    @apply bg-success-green text-white hover:bg-green-700;
+    background-color: var(--color-success-green);
+    color: white;
+    @apply hover:opacity-90;
   }
 
   .btn-warning {
-    @apply bg-warning-orange text-white hover:bg-orange-700;
+    background-color: var(--color-warning-orange);
+    color: white;
+    @apply hover:opacity-90;
   }
 }
 
@@ -63,18 +73,27 @@
   }
 
   .grid-sudoku {
-    @apply inline-block border-2 border-neutral-dark;
+    @apply inline-block border-2;
+    border-color: var(--color-neutral-dark);
   }
 
   .cell-sudoku {
-    @apply w-12 h-12 flex items-center justify-center border border-neutral-dark text-lg font-bold cursor-pointer hover:bg-neutral-light;
+    @apply w-12 h-12 flex items-center justify-center border text-lg font-bold cursor-pointer;
+    border-color: var(--color-neutral-dark);
+    background-color: transparent;
+  }
+
+  .cell-sudoku:hover {
+    background-color: var(--color-neutral-light);
   }
 
   .cell-sudoku.filled {
-    @apply bg-primary-blue text-white;
+    background-color: var(--color-primary-blue);
+    color: white;
   }
 
   .cell-sudoku.candidate {
-    @apply text-candidate-purple text-sm;
+    color: var(--color-candidate-purple);
+    @apply text-sm;
   }
 }

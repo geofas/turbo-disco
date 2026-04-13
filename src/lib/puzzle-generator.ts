@@ -6,9 +6,13 @@
  * 1. Generate complete grid from seed (permutations of canonical grid)
  * 2. Create puzzle by removing cells symmetrically
  * 3. Validate solvability with L1–L3 techniques only
+ *
+ * Supports seeded (deterministic) and non-seeded (random) generation.
+ * Seeds can be strings (e.g., "2026-04-13-L1-001") which are hashed to numbers.
  */
 
-import { solvePuzzle, deepCopyGrid, validatePuzzle, SolveResult, Grid } from './puzzle-solver';
+import { solvePuzzle, deepCopyGrid } from './puzzle-solver';
+import type { SolveResult, Grid } from './puzzle-solver';
 
 export type Puzzle = {
   grid: Grid;
@@ -26,6 +30,23 @@ const difficultyParams = {
   2: { minFilled: 35, maxFilled: 40, name: 'Hidden Single' },
   3: { minFilled: 30, maxFilled: 35, name: 'Naked Single' }
 };
+
+/**
+ * Hash a string seed to a number using FNV-1a algorithm
+ * Returns a 32-bit integer suitable for use as a PRNG seed
+ */
+export function hashSeed(seed: string): number {
+  let hash = 2166136261; // FNV offset basis (32-bit)
+  const prime = 16777619;
+
+  for (let i = 0; i < seed.length; i++) {
+    hash ^= seed.charCodeAt(i);
+    hash = (hash * prime) | 0; // Keep as 32-bit signed integer
+  }
+
+  // Convert to positive integer
+  return Math.abs(hash);
+}
 
 /**
  * Canonical valid sudoku grid (starting point for all generations)
@@ -259,13 +280,55 @@ function getTechniqueNames(result: SolveResult): string[] {
  * Main puzzle generation function
  * Generates a valid, technique-tagged puzzle
  * Performance target: < 1 second
+ *
+ * @param seedOrLevel - Either a numeric seed or a level (for backward compatibility)
+ * @param levelOrUndefined - Level (1-3) if first param is numeric seed, undefined otherwise
+ * @param seedString - Optional string seed for deterministic generation (e.g., "2026-04-13-L1-001")
+ *
+ * Overloads:
+ * - generatePuzzle(numericSeed, level) - numeric seed (old API, still supported)
+ * - generatePuzzle(level, stringOptions) - string seed (new API)
  */
-export function generatePuzzle(seed: number, level: 1 | 2 | 3): Puzzle {
+export function generatePuzzle(
+  seedOrLevel: number | 1 | 2 | 3,
+  levelOrOptions?: 1 | 2 | 3 | { seed?: string },
+  _reserved?: string // for backward compat
+): Puzzle {
+  let numericSeed: number;
+  let level: 1 | 2 | 3;
+  let useRandomness = false;
+
+  // Detect which API is being used
+  if (typeof seedOrLevel === 'number' && typeof levelOrOptions === 'number') {
+    // Old API: generatePuzzle(numericSeed, level)
+    numericSeed = seedOrLevel;
+    level = levelOrOptions as 1 | 2 | 3;
+  } else if ([1, 2, 3].includes(seedOrLevel as number)) {
+    // New API: generatePuzzle(level, options?)
+    level = seedOrLevel as 1 | 2 | 3;
+    const options = levelOrOptions as { seed?: string } | undefined;
+    const seedString = options?.seed;
+
+    if (seedString) {
+      numericSeed = hashSeed(seedString);
+    } else {
+      // No seed provided: use random generation
+      numericSeed = Math.floor(Math.random() * 0x7fffffff);
+      useRandomness = true;
+    }
+  } else {
+    throw new Error(
+      'Invalid arguments to generatePuzzle. Use either generatePuzzle(numericSeed, level) or generatePuzzle(level, { seed?: string })'
+    );
+  }
+
   const startTime = performance.now();
   const maxAttempts = 100;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const attemptSeed = seed + attempt;
+    const attemptSeed = useRandomness
+      ? Math.floor(Math.random() * 0x7fffffff)
+      : numericSeed + attempt;
 
     // Stage 1: Generate complete grid
     const grid = generateGrid(attemptSeed);
@@ -292,8 +355,8 @@ export function generatePuzzle(seed: number, level: 1 | 2 | 3): Puzzle {
   }
 
   // Fallback: return what we have after max attempts (should rarely happen)
-  const grid = generateGrid(seed);
-  const puzzleGrid = createPuzzle(grid, level, seed);
+  const grid = generateGrid(numericSeed);
+  const puzzleGrid = createPuzzle(grid, level, numericSeed);
   const result = solvePuzzle(puzzleGrid);
 
   return {
@@ -309,11 +372,33 @@ export function generatePuzzle(seed: number, level: 1 | 2 | 3): Puzzle {
 
 /**
  * Generate multiple puzzles for testing
+ * Uses numeric seeds to ensure deterministic batch generation
  */
 export function generatePuzzles(level: 1 | 2 | 3, count: number): Puzzle[] {
   const puzzles: Puzzle[] = [];
   for (let i = 0; i < count; i++) {
+    // Use old API (numeric seed) for backward compatibility in batch generation
     puzzles.push(generatePuzzle(1000 + i, level));
+  }
+  return puzzles;
+}
+
+/**
+ * Generate puzzles with string seeds for reproducibility
+ * @param level Sudoku level (1-3)
+ * @param seedPrefix Base seed string (e.g., "2026-04-13-L1")
+ * @param count Number of puzzles to generate
+ * @returns Array of puzzles with deterministic generation
+ */
+export function generatePuzzlesWithSeeds(
+  level: 1 | 2 | 3,
+  seedPrefix: string,
+  count: number
+): Puzzle[] {
+  const puzzles: Puzzle[] = [];
+  for (let i = 1; i <= count; i++) {
+    const seed = `${seedPrefix}-${String(i).padStart(3, '0')}`;
+    puzzles.push(generatePuzzle(level, { seed }));
   }
   return puzzles;
 }

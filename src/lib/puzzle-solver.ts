@@ -175,18 +175,6 @@ function getEmptyInBox(grid: Grid, row: number, col: number): Array<[number, num
 }
 
 /**
- * Check if grid is fully solved
- */
-function isSolved(grid: Grid): boolean {
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
-      if (grid[r][c] === 0) return false;
-    }
-  }
-  return true;
-}
-
-/**
  * Count unsolved cells
  */
 function countUnsolved(grid: Grid): number {
@@ -279,7 +267,7 @@ export function solvePuzzle(puzzle: Grid): SolveResult {
             // Row must complete with only one candidate
             const emptyInRow = getEmptyInRow(solved, r);
             if (emptyInRow.length === 1) {
-              const value = Array.from(candidates[r][c])[0] || inferMissingValue(solved, r, c);
+              const value = Array.from(candidates[r][c])[0] || inferMissingValue(solved, r);
               solved[r][c] = value;
               eliminateFromPeers(candidates, r, c, value);
               techniques.fullHouse++;
@@ -301,7 +289,7 @@ export function solvePuzzle(puzzle: Grid): SolveResult {
           if (solved[r][c] === 0) {
             const emptyInCol = getEmptyInCol(solved, c);
             if (emptyInCol.length === 1) {
-              const value = Array.from(candidates[r][c])[0] || inferMissingValue(solved, r, c);
+              const value = Array.from(candidates[r][c])[0] || inferMissingValue(solved, r);
               solved[r][c] = value;
               eliminateFromPeers(candidates, r, c, value);
               techniques.fullHouse++;
@@ -316,7 +304,7 @@ export function solvePuzzle(puzzle: Grid): SolveResult {
           if (solved[r][c] === 0) {
             const emptyInBox = getEmptyInBox(solved, r, c);
             if (emptyInBox.length === 1) {
-              const value = Array.from(candidates[r][c])[0] || inferMissingValue(solved, r, c);
+              const value = Array.from(candidates[r][c])[0] || inferMissingValue(solved, r);
               solved[r][c] = value;
               eliminateFromPeers(candidates, r, c, value);
               techniques.fullHouse++;
@@ -432,7 +420,7 @@ export function solvePuzzle(puzzle: Grid): SolveResult {
 /**
  * Infer missing value in a row (for full house verification)
  */
-function inferMissingValue(grid: Grid, row: number, col: number): number {
+function inferMissingValue(grid: Grid, row: number): number {
   const used = new Set<number>();
   for (let c = 0; c < 9; c++) {
     if (grid[row][c] !== 0) {
