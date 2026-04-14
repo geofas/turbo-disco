@@ -55,7 +55,9 @@ describe('usePuzzleSession', () => {
     );
 
     expect(result.current.state.timer).toBe(0);
-    expect(result.current.state.isRunning).toBe(false);
+    // Hook auto-starts when a real puzzle is provided so entered values are
+    // accepted immediately by enterValue (which guards on isRunning).
+    expect(result.current.state.isRunning).toBe(true);
     expect(result.current.state.mistakes).toBe(0);
     expect(result.current.state.hintsUsed).toBe(0);
     expect(result.current.state.isComplete).toBe(false);

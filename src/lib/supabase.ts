@@ -9,7 +9,14 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 let supabase: ReturnType<typeof createClient<Database>> | null = null;
 
 if (supabaseUrl && supabaseKey) {
-  supabase = createClient<Database>(supabaseUrl, supabaseKey);
+  supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+    auth: {
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  });
 }
 
 /**

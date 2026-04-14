@@ -20,11 +20,25 @@ export default function AuthCallbackPage() {
       }
 
       try {
-        // Supabase JS client automatically picks up the tokens from the URL hash
-        // and exchanges them for a session. We just need to wait for it.
-        const { error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('OAuth callback error:', error);
+        // Supabase PKCE flow: Google returns ?code=... in query params.
+        // Explicitly exchange the code for a session so we don't race the
+        // client's auto-detect behaviour.
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            console.error('OAuth code exchange failed:', exchangeError);
+            navigate('/auth');
+            return;
+          }
+        }
+
+        // Confirm we actually have a session before redirecting.
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data.session) {
+          console.error('OAuth callback: no session after exchange', error);
           navigate('/auth');
           return;
         }
