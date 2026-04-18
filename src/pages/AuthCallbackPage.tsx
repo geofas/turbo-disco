@@ -4,54 +4,87 @@ import { getSupabaseClient } from '../lib/supabase';
 
 /**
  * Handles the OAuth redirect callback from Supabase.
- * When Google redirects back with tokens in the URL hash,
- * Supabase client automatically exchanges them for a session.
- * This page waits for that to complete, then redirects to /curriculum.
+ *
+ * With flowType: 'pkce' and detectSessionInUrl: true, the Supabase client
+ * automatically detects the ?code= param and exchanges it for a session
+ * during its internal _initialize() call. A manual exchangeCodeForSession()
+ * here races with that auto-detect — if auto-detect wins, the manual call
+ * fails with "code already used" and the old code sent the user to /auth.
+ *
+ * Fix: listen for the auth state change (which fires regardless of who
+ * exchanged the code) and poll getSession() as a fallback. Never bail to
+ * /auth just because a manual exchange failed.
  */
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleCallback = async () => {
-      const supabase = getSupabaseClient();
-      if (!supabase) {
-        navigate('/auth');
-        return;
-      }
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      navigate('/auth');
+      return;
+    }
 
+    let settled = false;
+    const settle = (path: string) => {
+      if (!settled) {
+        settled = true;
+        navigate(path, { replace: true });
+      }
+    };
+
+    // Path 1: auth state listener — fires when *either* auto-detect or
+    // manual exchange establishes a session.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          settle('/curriculum');
+        }
+      }
+    );
+
+    // Path 2: try the manual exchange, then fall through to a polling
+    // check. This covers the case where the listener was registered
+    // after the session was already established.
+    const handleCallback = async () => {
       try {
-        // Supabase PKCE flow: Google returns ?code=... in query params.
-        // Explicitly exchange the code for a session so we don't race the
-        // client's auto-detect behaviour.
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
 
         if (code) {
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError) {
-            console.error('OAuth code exchange failed:', exchangeError);
-            navigate('/auth');
+          // Attempt manual exchange — may fail if auto-detect already
+          // consumed the code. That's fine; we don't bail on error.
+          await supabase.auth.exchangeCodeForSession(code);
+        }
+      } catch {
+        // Swallow — auto-detect may have handled it.
+      }
+
+      // Poll for up to 5 seconds in case the session is still being
+      // established asynchronously by the Supabase client.
+      for (let i = 0; i < 10; i++) {
+        if (settled) return;
+        try {
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            settle('/curriculum');
             return;
           }
+        } catch {
+          // ignore transient errors
         }
-
-        // Confirm we actually have a session before redirecting.
-        const { data, error } = await supabase.auth.getSession();
-        if (error || !data.session) {
-          console.error('OAuth callback: no session after exchange', error);
-          navigate('/auth');
-          return;
-        }
-
-        // Session is established — redirect to curriculum
-        navigate('/curriculum', { replace: true });
-      } catch (err) {
-        console.error('OAuth callback failed:', err);
-        navigate('/auth');
+        await new Promise(r => setTimeout(r, 500));
       }
+
+      // After 5 s with no session, give up.
+      settle('/auth');
     };
 
     handleCallback();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, [navigate]);
 
   return (
