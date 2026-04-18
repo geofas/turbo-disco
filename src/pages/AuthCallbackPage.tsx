@@ -36,7 +36,7 @@ export default function AuthCallbackPage() {
     // Path 1: auth state listener — fires when *either* auto-detect or
     // manual exchange establishes a session.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         if (session?.user) {
           settle('/curriculum');
         }
